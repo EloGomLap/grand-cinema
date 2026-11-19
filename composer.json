@@ -1,0 +1,39 @@
+{
+    "name": "elogomlap/grand-cinema",
+    "description": "Application de réservation du Grand Cinéma - Bachelor Bloc 3",
+    "type": "project",
+    "license": "proprietary",
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require": {
+        "php": ">=8.2",
+        "ext-ctype": "*",
+        "ext-iconv": "*",
+        "ext-pdo_sqlite": "*",
+        "doctrine/dbal": "^4.3",
+        "doctrine/doctrine-bundle": "^2.19",
+        "doctrine/orm": "^3.5",
+        "symfony/console": "7.4.*",
+        "symfony/dotenv": "7.4.*",
+        "symfony/framework-bundle": "7.4.*",
+        "symfony/security-bundle": "7.4.*",
+        "symfony/twig-bundle": "7.4.*",
+        "symfony/validator": "7.4.*",
+        "symfony/yaml": "7.4.*",
+        "twig/twig": "^3.21"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5",
+        "symfony/browser-kit": "7.4.*",
+        "symfony/css-selector": "7.4.*"
+    },
+    "autoload": {
+        "psr-4": { "App\\": "src/" }
+    },
+    "autoload-dev": {
+        "psr-4": { "App\\Tests\\": "tests/" }
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
