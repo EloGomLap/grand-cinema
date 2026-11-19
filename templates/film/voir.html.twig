@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ film.titre }} - Le Grand Cinéma{% endblock %}
+
+{% block body %}
+    <p><a href="{{ path('film_index') }}">&larr; Retour à la banque de films</a></p>
+    <article class="carte">
+        <h1>{{ film.titre }}</h1>
+        <p class="meta">
+            {{ film.dureeFormatee }}
+            {% if film.genre %} - {{ film.genre }}{% endif %}
+            {% if film.classification %} - {{ film.classification }}{% endif %}
+            {% if film.dateSortie %} - sortie le {{ film.dateSortie|date('d/m/Y') }}{% endif %}
+        </p>
+        {% if film.realisateur %}<p>Réalisé par {{ film.realisateur }}</p>{% endif %}
+        {% if film.synopsis %}<p>{{ film.synopsis }}</p>{% endif %}
+        {% if film.afficheUrl %}<p><a href="{{ film.afficheUrl }}" rel="noopener" target="_blank">Voir l'affiche</a></p>{% endif %}
+
+        {% if is_granted('ROLE_PROGRAMMATEUR') %}
+            <div class="actions">
+                <a class="bouton secondaire" href="{{ path('film_modifier', {id: film.id}) }}">Modifier</a>
+                <form method="post" action="{{ path('film_supprimer', {id: film.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('supprimer' ~ film.id) }}">
+                    <button class="bouton danger" type="submit">Supprimer</button>
+                </form>
+            </div>
+        {% endif %}
+    </article>
+{% endblock %}

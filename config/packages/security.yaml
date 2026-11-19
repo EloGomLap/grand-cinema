@@ -1,0 +1,51 @@
+security:
+    # Les mots de passe sont hachés (bcrypt / argon2 selon le serveur), jamais stockés en clair
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+
+    providers:
+        utilisateurs:
+            entity:
+                class: App\Entity\Utilisateur
+                property: email
+
+    # Un administrateur hérite des droits du programmateur et du guichetier
+    role_hierarchy:
+        ROLE_ADMIN: [ROLE_PROGRAMMATEUR, ROLE_GUICHETIER]
+        ROLE_PROGRAMMATEUR: [ROLE_USER]
+        ROLE_GUICHETIER: [ROLE_USER]
+        ROLE_CLIENT: [ROLE_USER]
+
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+        # API REST : sans session, authentification HTTP Basic (utilisable depuis Swagger)
+        api:
+            pattern: ^/api/
+            stateless: true
+            provider: utilisateurs
+            http_basic:
+                realm: 'API Grand Cinema'
+        # Interface web : formulaire de connexion avec session
+        main:
+            lazy: true
+            provider: utilisateurs
+            form_login:
+                login_path: app_login
+                check_path: app_login
+                enable_csrf: true
+                default_target_path: film_index
+            logout:
+                path: app_logout
+                target: film_index
+
+when@test:
+    security:
+        password_hashers:
+            # Hachage volontairement rapide pour accélérer les tests
+            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
+                algorithm: auto
+                cost: 4
+                time_cost: 3
+                memory_cost: 10

@@ -7,21 +7,32 @@ Objectif métier : augmenter la fréquentation de 30 % en 12 mois et absorber le
 
 | Couche | Technologie |
 |---|---|
-| Back-end / API REST | PHP 8.3 - Symfony 7 (API Platform / NelmioApiDocBundle pour Swagger) |
-| Base de données | PostgreSQL 16 (ORM Doctrine) |
+| Back-end / API REST | PHP 8.3 - Symfony 7.4 LTS |
+| Base de données | SQLite en développement et en test, PostgreSQL 16 en production cible (ORM Doctrine) |
+| Documentation API | OpenAPI 3 (`public/openapi.yaml`) affichée avec Swagger UI sur `/api/doc` |
 | Front-end | Twig + JavaScript (interface client et interface guichet) |
 | Tests | PHPUnit (unitaires), WebTestCase (fonctionnels) |
 | Qualité | SonarCloud |
-| CI | GitHub Actions |
+| CI | GitHub Actions (`.github/workflows/ci.yml`) : tests à chaque push et pull request |
 
 ## Organisation du dépôt
 
 ```
 grand-cinema/
-├── database/        Script SQL de création de la base
-├── docs/            Documentation (MCD, Swagger exporté)
-├── src/             Code Symfony (Controller, Entity, Repository, Service)
-├── tests/           Tests unitaires et fonctionnels
+├── bin/console          Commandes Symfony
+├── config/              Configuration (sécurité, base de données...)
+├── database/schema.sql  Script SQL complet de la base (PostgreSQL)
+├── public/              Point d'entrée web + openapi.yaml (documentation de l'API)
+├── src/
+│   ├── Command/         Commande d'initialisation de la base
+│   ├── Controller/      Contrôleurs web et API (Controller/Api)
+│   ├── Entity/          Entités Doctrine (Film, Utilisateur)
+│   ├── EventSubscriber/ Gestion centralisée des erreurs de l'API
+│   ├── Exception/       Exceptions métier
+│   ├── Repository/      Accès aux données
+│   └── Service/         Logique métier (FilmService)
+├── templates/           Vues Twig
+├── tests/               Tests unitaires (Unit) et fonctionnels (Functional)
 └── README.md
 ```
 
@@ -79,12 +90,58 @@ Exemple : `feat: ajout du choix de la place lors de la réservation`
 | Contrôle | Présenter son billet | `feature/controle-presenter-billet` |
 | Contrôle | Scanner les billets | `feature/controle-scanner-billets` |
 
+## Fonctionnalité livrée : la banque de films
+
+User stories « Programmation - Ajouter un film » et « Programmation - Renseigner la fiche d'un film », développées sur la branche `feature/programmation-ajouter-film`.
+
+- Consultation du catalogue (tout le monde), avec filtre par genre.
+- Ajout, modification et suppression d'un film (programmateur et administrateur uniquement).
+- Mêmes règles métier pour le site et pour l'API, grâce au service `FilmService` : titre obligatoire, durée entre 1 et 600 minutes, classification parmi une liste, date au format AAAA-MM-JJ, URL d'affiche valide.
+- Sécurité : connexion par formulaire (site) ou HTTP Basic (API), mots de passe hachés, contrôle des rôles, jetons CSRF sur les formulaires.
+
+## Comptes de démonstration
+
+Créés par la commande `php bin/console app:initialiser-base` :
+
+| Rôle | Email | Mot de passe | Droits |
+|---|---|---|---|
+| Administrateur | admin@grandcinema.fr | Admin-Cinema-2026 | Tous les droits |
+| Programmateur | programmateur@grandcinema.fr | Prog-Cinema-2026 | Gestion de la banque de films |
+| Client | client@grandcinema.fr | Client-Cinema-2026 | Consultation |
+
+En production, les mots de passe se changent avec les options `--mdp-admin`, `--mdp-programmateur` et `--mdp-client`.
+
+## API REST
+
+Documentation interactive : `/api/doc` (Swagger UI). Bouton **Authorize** pour s'identifier.
+
+| Méthode | Route | Accès | Rôle |
+|---|---|---|---|
+| GET | /api/films?genre=... | Public | Liste des films |
+| GET | /api/films/{id} | Public | Détail d'un film |
+| POST | /api/films | Programmateur | Ajout (201) |
+| PUT | /api/films/{id} | Programmateur | Modification |
+| DELETE | /api/films/{id} | Programmateur | Suppression (204) |
+
+Codes d'erreur : 400 (données invalides, avec le détail par champ), 401 (non authentifié), 403 (rôle insuffisant), 404 (film introuvable).
+
 ## Installation (développement)
 
+Prérequis : PHP 8.2 ou plus avec l'extension `pdo_sqlite`, et Composer.
+
 ```bash
-git clone <url-du-depot>
+git clone https://github.com/EloGomLap/grand-cinema.git
 cd grand-cinema
 composer install
-psql -U postgres -f database/schema.sql
-symfony server:start
+php bin/console app:initialiser-base     # crée var/data.db et les comptes de démonstration
+php -S localhost:8000 -t public          # puis ouvrir http://localhost:8000
 ```
+
+## Tests
+
+```bash
+vendor/bin/phpunit                                   # 37 tests unitaires et fonctionnels
+vendor/bin/phpunit --coverage-html coverage          # rapport de couverture (extension pcov ou xdebug)
+```
+
+Les tests fonctionnels utilisent une base SQLite dédiée (`var/test.db`), recréée avant chaque test : la base de développement n'est jamais modifiée.
