@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Banque de films - Le Grand Cinéma{% endblock %}
+
+{% block body %}
+    <div class="actions" style="justify-content: space-between; margin-bottom: 1rem;">
+        <h1 style="margin: 0;">Banque de films</h1>
+        {% if is_granted('ROLE_PROGRAMMATEUR') %}
+            <a class="bouton" href="{{ path('film_nouveau') }}">Ajouter un film</a>
+        {% endif %}
+    </div>
+
+    <form method="get" class="filtres">
+        <input type="text" name="genre" value="{{ genre }}" placeholder="Filtrer par genre (ex. Biopic)" aria-label="Genre">
+        <button class="bouton secondaire" type="submit">Filtrer</button>
+        {% if genre %}<a class="bouton secondaire" href="{{ path('film_index') }}">Tout afficher</a>{% endif %}
+    </form>
+
+    {% if films is empty %}
+        <p class="meta">Aucun film pour le moment.</p>
+    {% else %}
+        <div class="grille">
+            {% for film in films %}
+                <article class="carte">
+                    <h2><a href="{{ path('film_voir', {id: film.id}) }}">{{ film.titre }}</a></h2>
+                    <div class="meta">{{ film.dureeFormatee }}{% if film.genre %} - {{ film.genre }}{% endif %}</div>
+                    {% if film.realisateur %}<div class="meta">{{ film.realisateur }}</div>{% endif %}
+                </article>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,7 @@
+vendor/
+var/
+coverage/
+.phpunit.cache/
+.git/
+composer.local.json
+composer.local.lock

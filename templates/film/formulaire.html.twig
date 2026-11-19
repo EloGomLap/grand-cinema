@@ -1,0 +1,59 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ titre_page }} - Le Grand Cinéma{% endblock %}
+
+{% macro erreur(erreurs, champ) %}
+    {% if erreurs[champ] is defined %}<span class="erreur-champ">{{ erreurs[champ] }}</span>{% endif %}
+{% endmacro %}
+
+{% block body %}
+    {% import _self as f %}
+    <h1>{{ titre_page }}</h1>
+    {% if erreurs is not empty %}
+        <div class="flash erreur">Le film n'a pas été enregistré : corrigez les champs indiqués.</div>
+    {% endif %}
+
+    <form method="post" class="formulaire" novalidate>
+        <label>Titre *
+            <input type="text" name="film[titre]" value="{{ donnees.titre ?? '' }}" maxlength="200">
+            {{ f.erreur(erreurs, 'titre') }}
+        </label>
+        <label>Durée (minutes) *
+            <input type="number" name="film[dureeMinutes]" value="{{ donnees.dureeMinutes ?? '' }}" min="1" max="600">
+            {{ f.erreur(erreurs, 'dureeMinutes') }}
+        </label>
+        <label>Réalisateur
+            <input type="text" name="film[realisateur]" value="{{ donnees.realisateur ?? '' }}" maxlength="150">
+            {{ f.erreur(erreurs, 'realisateur') }}
+        </label>
+        <label>Genre
+            <input type="text" name="film[genre]" value="{{ donnees.genre ?? '' }}" maxlength="50">
+            {{ f.erreur(erreurs, 'genre') }}
+        </label>
+        <label>Classification
+            <select name="film[classification]">
+                <option value="">Non renseignée</option>
+                {% for c in classifications %}
+                    <option value="{{ c }}" {{ (donnees.classification ?? '') == c ? 'selected' }}>{{ c }}</option>
+                {% endfor %}
+            </select>
+            {{ f.erreur(erreurs, 'classification') }}
+        </label>
+        <label>Date de sortie
+            <input type="date" name="film[dateSortie]" value="{{ donnees.dateSortie ?? '' }}">
+            {{ f.erreur(erreurs, 'dateSortie') }}
+        </label>
+        <label>URL de l'affiche
+            <input type="url" name="film[afficheUrl]" value="{{ donnees.afficheUrl ?? '' }}">
+            {{ f.erreur(erreurs, 'afficheUrl') }}
+        </label>
+        <label>Synopsis
+            <textarea name="film[synopsis]" rows="5">{{ donnees.synopsis ?? '' }}</textarea>
+        </label>
+        <input type="hidden" name="_token" value="{{ csrf_token('film') }}">
+        <div class="actions">
+            <button class="bouton" type="submit">Enregistrer</button>
+            <a class="bouton secondaire" href="{{ path('film_index') }}">Annuler</a>
+        </div>
+    </form>
+{% endblock %}

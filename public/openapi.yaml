@@ -1,0 +1,159 @@
+openapi: 3.0.3
+info:
+  title: API Grand Cinéma - Banque de films
+  version: 1.0.0
+  description: |
+    API REST de gestion du catalogue de films du Grand Cinéma.
+
+    - La consultation (GET) est publique.
+    - La création, la modification et la suppression sont réservées aux rôles
+      PROGRAMMATEUR et ADMIN. Cliquez sur **Authorize** et saisissez l'email et
+      le mot de passe d'un compte programmateur ou administrateur (HTTP Basic).
+servers:
+  - url: /
+tags:
+  - name: Films
+    description: Banque de films du cinéma
+paths:
+  /api/films:
+    get:
+      tags: [Films]
+      summary: Lister les films
+      description: Renvoie les films triés par titre, éventuellement filtrés par genre.
+      parameters:
+        - name: genre
+          in: query
+          required: false
+          schema: { type: string }
+          example: Biopic
+      responses:
+        '200':
+          description: Liste des films
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Film' }
+    post:
+      tags: [Films]
+      summary: Ajouter un film
+      security: [{ basicAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FilmSaisie' }
+      responses:
+        '201':
+          description: Film créé
+          headers:
+            Location:
+              schema: { type: string }
+              description: URL du film créé
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Film' }
+        '400': { $ref: '#/components/responses/DonneesInvalides' }
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '403': { $ref: '#/components/responses/AccesRefuse' }
+  /api/films/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer, minimum: 1 }
+    get:
+      tags: [Films]
+      summary: Consulter un film
+      responses:
+        '200':
+          description: Le film demandé
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Film' }
+        '404': { $ref: '#/components/responses/Introuvable' }
+    put:
+      tags: [Films]
+      summary: Modifier un film
+      description: Seuls les champs envoyés sont modifiés.
+      security: [{ basicAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FilmSaisie' }
+      responses:
+        '200':
+          description: Film modifié
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Film' }
+        '400': { $ref: '#/components/responses/DonneesInvalides' }
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '403': { $ref: '#/components/responses/AccesRefuse' }
+        '404': { $ref: '#/components/responses/Introuvable' }
+    delete:
+      tags: [Films]
+      summary: Supprimer un film
+      security: [{ basicAuth: [] }]
+      responses:
+        '204': { description: Film supprimé }
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '403': { $ref: '#/components/responses/AccesRefuse' }
+        '404': { $ref: '#/components/responses/Introuvable' }
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    Film:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        titre: { type: string, example: Round Midnight }
+        synopsis: { type: string, nullable: true }
+        dureeMinutes: { type: integer, example: 133 }
+        realisateur: { type: string, nullable: true, example: Bertrand Tavernier }
+        genre: { type: string, nullable: true, example: Drame musical }
+        classification: { type: string, nullable: true, enum: ['Tous publics', '-12', '-16', '-18'] }
+        afficheUrl: { type: string, format: uri, nullable: true }
+        dateSortie: { type: string, format: date, nullable: true, example: '1986-11-05' }
+    FilmSaisie:
+      type: object
+      required: [titre, dureeMinutes]
+      properties:
+        titre: { type: string, maxLength: 200, example: Whiplash }
+        synopsis: { type: string }
+        dureeMinutes: { type: integer, minimum: 1, maximum: 600, example: 107 }
+        realisateur: { type: string, maxLength: 150, example: Damien Chazelle }
+        genre: { type: string, maxLength: 50, example: Drame musical }
+        classification: { type: string, enum: ['Tous publics', '-12', '-16', '-18'] }
+        afficheUrl: { type: string, format: uri }
+        dateSortie: { type: string, format: date, example: '2014-12-24' }
+    Erreur:
+      type: object
+      properties:
+        erreur: { type: string }
+        details:
+          type: object
+          additionalProperties: { type: string }
+          example: { titre: Le titre est obligatoire. }
+  responses:
+    DonneesInvalides:
+      description: Données invalides (JSON mal formé ou règles métier non respectées)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Erreur' }
+    NonAuthentifie:
+      description: Authentification requise
+    AccesRefuse:
+      description: Rôle insuffisant (programmateur ou administrateur requis)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Erreur' }
+    Introuvable:
+      description: Film introuvable
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Erreur' }

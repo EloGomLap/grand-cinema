@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Le Grand Cinéma{% endblock %}</title>
+    <style>
+        :root { --fond: #14121a; --carte: #1f1c28; --texte: #f1eee8; --doux: #a9a3b5; --accent: #e8b04b; --erreur: #ff7a6b; --ok: #6fd08c; }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--fond); color: var(--texte); line-height: 1.5; }
+        a { color: var(--accent); }
+        header { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; border-bottom: 1px solid #2e2a3a; }
+        header .logo { font-size: 1.3rem; font-weight: 700; color: var(--texte); text-decoration: none; letter-spacing: .02em; }
+        header .logo span { color: var(--accent); }
+        nav { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; font-size: .95rem; }
+        main { max-width: 1000px; margin: 0 auto; padding: 1.5rem; }
+        h1 { margin-top: 0; }
+        .bouton { display: inline-block; background: var(--accent); color: #1a1406; border: 0; border-radius: 6px; padding: .55rem 1rem; font-weight: 600; text-decoration: none; cursor: pointer; font-size: .95rem; }
+        .bouton.secondaire { background: transparent; color: var(--texte); border: 1px solid #4a4458; }
+        .bouton.danger { background: var(--erreur); color: #1a0703; }
+        .grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+        .carte { background: var(--carte); border-radius: 10px; padding: 1rem; border: 1px solid #2e2a3a; }
+        .carte h2 { font-size: 1.1rem; margin: 0 0 .3rem; }
+        .meta { color: var(--doux); font-size: .9rem; }
+        .flash { padding: .7rem 1rem; border-radius: 6px; margin-bottom: 1rem; }
+        .flash.succes { background: rgba(111, 208, 140, .15); border: 1px solid var(--ok); }
+        .flash.erreur, .erreur-champ { color: var(--erreur); }
+        .flash.erreur { background: rgba(255, 122, 107, .12); border: 1px solid var(--erreur); }
+        form.formulaire { display: grid; gap: 1rem; max-width: 560px; }
+        label { display: grid; gap: .3rem; font-weight: 600; }
+        input, textarea, select { font: inherit; padding: .55rem .7rem; border-radius: 6px; border: 1px solid #4a4458; background: #15131c; color: var(--texte); }
+        .actions { display: flex; gap: .7rem; flex-wrap: wrap; align-items: center; }
+        .filtres { display: flex; gap: .5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    </style>
+</head>
+<body>
+<header>
+    <a class="logo" href="{{ path('film_index') }}">Le Grand <span>Cinéma</span></a>
+    <nav>
+        <a href="{{ path('film_index') }}">Banque de films</a>
+        <a href="{{ path('api_doc') }}">API (Swagger)</a>
+        {% if app.user %}
+            <span class="meta">{{ app.user.prenom }} {{ app.user.nom }} ({{ app.user.role|lower }})</span>
+            <a href="{{ path('app_logout') }}">Déconnexion</a>
+        {% else %}
+            <a href="{{ path('app_login') }}">Connexion</a>
+        {% endif %}
+    </nav>
+</header>
+<main>
+    {% for message in app.flashes('succes') %}
+        <div class="flash succes">{{ message }}</div>
+    {% endfor %}
+    {% block body %}{% endblock %}
+</main>
+</body>
+</html>
