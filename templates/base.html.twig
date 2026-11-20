@@ -45,6 +45,7 @@
     <nav>
         <a href="{{ path('film_index') }}">Banque de films</a>
         <a href="{{ path('api_doc') }}">API (Swagger)</a>
+        {% if is_granted('ROLE_PROGRAMMATEUR') %}<a href="{{ path('programmation_seances') }}">Programmation</a>{% endif %}
         {% if is_granted('ROLE_ADMIN') %}<a href="{{ path('admin_utilisateurs') }}">Comptes</a>{% endif %}
         {% if app.user %}
             <span class="meta">{{ app.user.prenom }} {{ app.user.nom }} ({{ app.user.role|lower }})</span>

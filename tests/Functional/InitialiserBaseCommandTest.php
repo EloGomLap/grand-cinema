@@ -3,6 +3,8 @@
 namespace App\Tests\Functional;
 
 use App\Entity\Film;
+use App\Entity\Salle;
+use App\Entity\Seance;
 use App\Entity\Utilisateur;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
@@ -22,6 +24,8 @@ class InitialiserBaseCommandTest extends KernelTestCase
         $em = static::getContainer()->get(EntityManagerInterface::class);
         self::assertSame(5, $em->getRepository(Utilisateur::class)->count([]));
         self::assertSame(4, $em->getRepository(Film::class)->count([]));
+        self::assertSame(3, $em->getRepository(Salle::class)->count([]));
+        self::assertSame(70, $em->getRepository(Seance::class)->count([]), '5 séances par jour pendant 14 jours');
         self::assertSame('ADMIN', $em->getRepository(Utilisateur::class)->findOneBy(['email' => 'admin@grandcinema.fr'])->getRole());
     }
 }
