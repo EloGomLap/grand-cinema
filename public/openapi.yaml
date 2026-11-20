@@ -116,6 +116,22 @@ paths:
                 type: array
                 items: { $ref: '#/components/schemas/Salle' }
   /api/seances:
+    get:
+      tags: [Séances]
+      summary: Lister les séances à venir
+      description: Séances qui ne sont pas encore commencées, de la plus proche à la plus lointaine.
+      parameters:
+        - { name: date, in: query, required: false, schema: { type: string, format: date }, description: Limiter à un jour (AAAA-MM-JJ) }
+        - { name: filmId, in: query, required: false, schema: { type: integer }, description: Limiter à un film }
+      responses:
+        '200':
+          description: Séances à venir
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Seance' }
+        '404': { $ref: '#/components/responses/Introuvable' }
     post:
       tags: [Séances]
       summary: Programmer une séance (PROGRAMMATEUR)

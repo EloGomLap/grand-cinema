@@ -43,9 +43,10 @@
 </head>
 <body>
 <header>
-    <a class="logo" href="{{ path('film_index') }}">Le Grand <span>Cinéma</span></a>
+    <a class="logo" href="{{ path('accueil') }}">Le Grand <span>Cinéma</span></a>
     <nav>
-        <a href="{{ path('film_index') }}">Banque de films</a>
+        <a href="{{ path('seance_index') }}">Séances</a>
+        <a href="{{ path('film_index') }}">Films</a>
         <a href="{{ path('api_doc') }}">API (Swagger)</a>
         {% if is_granted('ROLE_PROGRAMMATEUR') %}<a href="{{ path('programmation_seances') }}">Programmation</a>{% endif %}
         {% if is_granted('ROLE_ADMIN') %}<a href="{{ path('admin_utilisateurs') }}">Comptes</a>{% endif %}

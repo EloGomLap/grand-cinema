@@ -5,6 +5,7 @@ namespace App\Controller\Api;
 use App\Entity\Salle;
 use App\Entity\Seance;
 use App\Exception\DonneesInvalidesException;
+use App\Repository\FilmRepository;
 use App\Repository\SalleRepository;
 use App\Repository\SeanceRepository;
 use App\Controller\ProgrammationController;
@@ -28,7 +29,21 @@ class SeanceApiController extends AbstractApiController
         private readonly SalleRepository $salleRepository,
         private readonly SeanceService $seanceService,
         private readonly DisponibiliteService $disponibiliteService,
+        private readonly FilmRepository $filmRepository,
     ) {
+    }
+
+    #[Route('/seances', name: 'api_seance_liste', methods: ['GET'])]
+    public function liste(Request $request): JsonResponse
+    {
+        $date = $request->query->getString('date');
+        $jour = '' !== $date ? ProgrammationController::lireJour($date) : null;
+        $film = $request->query->getInt('filmId') > 0 ? $this->filmRepository->find($request->query->getInt('filmId')) : null;
+        if ($request->query->getInt('filmId') > 0 && null === $film) {
+            throw new NotFoundHttpException('Film introuvable.');
+        }
+
+        return $this->reponse(array_map(static fn (Seance $s) => $s->toArray(), $this->seanceRepository->aVenir($jour, $film)));
     }
 
     #[Route('/salles/disponibilite', name: 'api_salle_disponibilite', methods: ['GET'])]
