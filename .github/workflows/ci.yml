@@ -9,8 +9,12 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # historique complet : Sonar attribue chaque ligne au bon commit (nouveau code)
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -22,4 +26,13 @@ jobs:
         run: composer install --no-interaction --no-progress --prefer-dist
 
       - name: Lancer les tests avec la couverture
-        run: vendor/bin/phpunit --coverage-text --coverage-clover coverage.xml
+        run: vendor/bin/phpunit --coverage-text --coverage-clover coverage.xml --log-junit junit.xml
+
+      # Analyse de qualité : bugs, vulnérabilités, code smells, duplication et couverture.
+      # Le jeton SONAR_TOKEN est un secret du dépôt GitHub (Settings > Secrets and variables > Actions).
+      - name: Analyse SonarCloud
+        if: env.SONAR_TOKEN != ''
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
