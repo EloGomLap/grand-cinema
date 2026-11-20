@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Comptes - Administration{% endblock %}
+
+{% block body %}
+    <div class="actions" style="justify-content: space-between; margin-bottom: 1rem;">
+        <h1 style="margin: 0;">Comptes utilisateurs</h1>
+        <a class="bouton" href="{{ path('admin_utilisateur_nouveau') }}">Créer un compte du personnel</a>
+    </div>
+
+    <table class="tableau">
+        <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Créé le</th><th>Changer le rôle</th></tr></thead>
+        <tbody>
+        {% for u in utilisateurs %}
+            <tr>
+                <td>{{ u.nomComplet }}</td>
+                <td>{{ u.email }}</td>
+                <td><span class="badge">{{ u.role|lower }}</span></td>
+                <td>{{ u.dateCreation|date('d/m/Y') }}</td>
+                <td>
+                    <form method="post" action="{{ path('admin_utilisateur_role', {id: u.id}) }}" class="actions">
+                        <input type="hidden" name="_token" value="{{ csrf_token('role' ~ u.id) }}">
+                        <select name="role" aria-label="Nouveau rôle">
+                            {% for r in roles %}<option value="{{ r }}" {{ r == u.role ? 'selected' }}>{{ r|lower }}</option>{% endfor %}
+                        </select>
+                        <button class="bouton secondaire" type="submit">Appliquer</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

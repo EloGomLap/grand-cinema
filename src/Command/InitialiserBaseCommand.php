@@ -34,6 +34,8 @@ class InitialiserBaseCommand extends Command
             ->addOption('mdp-admin', null, InputOption::VALUE_REQUIRED, 'Mot de passe du compte administrateur', 'Admin-Cinema-2026')
             ->addOption('mdp-programmateur', null, InputOption::VALUE_REQUIRED, 'Mot de passe du compte programmateur', 'Prog-Cinema-2026')
             ->addOption('mdp-client', null, InputOption::VALUE_REQUIRED, 'Mot de passe du compte client', 'Client-Cinema-2026')
+            ->addOption('mdp-guichetier', null, InputOption::VALUE_REQUIRED, 'Mot de passe du compte guichetier', 'Guichet-Cinema-2026')
+            ->addOption('mdp-controleur', null, InputOption::VALUE_REQUIRED, 'Mot de passe du compte contrôleur', 'Controle-Cinema-2026')
             ->addOption('sans-films', null, InputOption::VALUE_NONE, 'Ne pas créer les films de démonstration');
     }
 
@@ -51,6 +53,8 @@ class InitialiserBaseCommand extends Command
             ['Admin', 'Cinema', 'admin@grandcinema.fr', 'ADMIN', $input->getOption('mdp-admin')],
             ['Martin', 'Paul', 'programmateur@grandcinema.fr', 'PROGRAMMATEUR', $input->getOption('mdp-programmateur')],
             ['Durand', 'Lea', 'client@grandcinema.fr', 'CLIENT', $input->getOption('mdp-client')],
+            ['Bernard', 'Sophie', 'guichetier@grandcinema.fr', 'GUICHETIER', $input->getOption('mdp-guichetier')],
+            ['Petit', 'Hugo', 'controleur@grandcinema.fr', 'CONTROLEUR', $input->getOption('mdp-controleur')],
         ];
 
         foreach ($comptes as [$nom, $prenom, $email, $role, $motDePasse]) {
@@ -78,7 +82,7 @@ class InitialiserBaseCommand extends Command
         }
 
         $this->entityManager->flush();
-        $io->success('Base initialisée avec les comptes admin, programmateur et client.');
+        $io->success('Base initialisée avec les comptes de démonstration (admin, programmateur, guichetier, contrôleur, client).');
 
         return Command::SUCCESS;
     }

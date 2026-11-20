@@ -20,7 +20,7 @@ class InitialiserBaseCommandTest extends KernelTestCase
 
         $commande->assertCommandIsSuccessful();
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        self::assertSame(3, $em->getRepository(Utilisateur::class)->count([]));
+        self::assertSame(5, $em->getRepository(Utilisateur::class)->count([]));
         self::assertSame(4, $em->getRepository(Film::class)->count([]));
         self::assertSame('ADMIN', $em->getRepository(Utilisateur::class)->findOneBy(['email' => 'admin@grandcinema.fr'])->getRole());
     }

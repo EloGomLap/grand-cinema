@@ -13,7 +13,7 @@ CREATE TABLE utilisateur (
     email           VARCHAR(180) NOT NULL UNIQUE,
     mot_de_passe    VARCHAR(255) NOT NULL,          -- hash (bcrypt/argon2), jamais en clair
     role            VARCHAR(20)  NOT NULL DEFAULT 'CLIENT'
-                    CHECK (role IN ('CLIENT', 'GUICHETIER', 'PROGRAMMATEUR', 'ADMIN')),
+                    CHECK (role IN ('CLIENT', 'GUICHETIER', 'CONTROLEUR', 'PROGRAMMATEUR', 'ADMIN')),
     date_creation   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
