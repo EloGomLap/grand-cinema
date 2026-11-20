@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ seance.film.titre }} - {{ seance.dateHeureDebut|date('d/m H:i') }}{% endblock %}
+
+{% block body %}
+    <p><a href="{{ path('seance_index') }}">&larr; Toutes les séances</a></p>
+    <article class="carte">
+        <h1>{{ seance.film.titre }}</h1>
+        <p><strong>{{ seance.dateHeureDebut|date('d/m/Y à H:i') }}</strong> - {{ seance.salle.nom }} - {{ seance.langue }}</p>
+        <p class="meta">
+            {{ seance.film.dureeFormatee }}
+            {% if seance.film.genre %} - {{ seance.film.genre }}{% endif %}
+            {% if seance.film.classification %} - {{ seance.film.classification }}{% endif %}
+        </p>
+        <p>Prix de la place : <strong>{{ seance.prix|number_format(2, ',', ' ') }} €</strong></p>
+        <p><a href="{{ path('film_voir', {id: seance.film.id}) }}">Fiche du film</a></p>
+    </article>
+{% endblock %}

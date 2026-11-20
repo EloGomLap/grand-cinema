@@ -22,7 +22,7 @@
         {% else %}
             <ul class="seances">
                 {% for s in seances|slice(0, 10) %}
-                    <li><span class="badge">{{ s.dateHeureDebut|date('d/m H:i') }}</span> {{ s.salle.nom }} - {{ s.langue }} - {{ s.prix|number_format(2, ',', ' ') }} €</li>
+                    <li><a class="badge" href="{{ path('seance_voir', {id: s.id}) }}">{{ s.dateHeureDebut|date('d/m H:i') }}</a> {{ s.salle.nom }} - {{ s.langue }} - {{ s.prix|number_format(2, ',', ' ') }} €</li>
                 {% endfor %}
             </ul>
         {% endif %}
