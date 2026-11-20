@@ -61,6 +61,39 @@ class PaiementService
         $this->billetNotifier->envoyerBillets($reservation);
     }
 
+    public const MODES_GUICHET = ['ESPECES' => 'Espèces', 'CB' => 'Carte bancaire', 'CHEQUE' => 'Chèque'];
+
+    /**
+     * User story « Paiement - Plusieurs moyens de paiement au guichet ».
+     * Pour les espèces, le montant reçu doit couvrir le total : la monnaie à rendre est renvoyée.
+     *
+     * @return string monnaie à rendre, en euros ("0.00" hors espèces)
+     *
+     * @throws DonneesInvalidesException
+     */
+    public function payerAuGuichet(Reservation $reservation, string $mode, ?string $montantRecu = null, ?\DateTimeImmutable $maintenant = null): string
+    {
+        $maintenant ??= new \DateTimeImmutable();
+        $this->verifierPayable($reservation, $maintenant);
+        if (!array_key_exists($mode, self::MODES_GUICHET)) {
+            throw new DonneesInvalidesException(['mode' => 'Moyen de paiement inconnu : espèces, carte bancaire ou chèque.']);
+        }
+
+        $monnaie = '0.00';
+        if ('ESPECES' === $mode) {
+            $recu = str_replace(',', '.', trim((string) $montantRecu));
+            if (!is_numeric($recu) || (float) $recu < (float) $reservation->getMontantTotal()) {
+                throw new DonneesInvalidesException(['montantRecu' => sprintf('Le montant reçu doit couvrir le total de %s €.', number_format((float) $reservation->getMontantTotal(), 2, ',', ' '))]);
+            }
+            $monnaie = number_format((float) $recu - (float) $reservation->getMontantTotal(), 2, '.', '');
+        }
+
+        $reservation->marquerPayee($mode, $maintenant);
+        $this->entityManager->flush();
+
+        return $monnaie;
+    }
+
     /**
      * @throws DonneesInvalidesException
      */
