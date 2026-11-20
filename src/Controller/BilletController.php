@@ -8,7 +8,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * Affichage d'un billet à partir de son code (lien reçu par email).
+ * User story « Contrôle - Présenter son billet » : le client affiche son billet (lien reçu par email
+ * ou depuis « Mes billets ») et présente le QR code à l'entrée de la salle.
  * Le code est long et aléatoire (128 bits) : impossible à deviner, il sert de clé d'accès.
  */
 class BilletController extends AbstractController
