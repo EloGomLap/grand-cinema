@@ -1,0 +1,22 @@
+{# Plan de salle : vert = libre, gris = déjà pris, contour bleu = place PMR. Avec selection, les places libres sont cochables. #}
+<div class="plan" role="group" aria-label="Plan de la salle">
+    <div class="ecran">Écran</div>
+    {% for rang, places in plan %}
+        <div class="rang">
+            <span>{{ rang }}</span>
+            {% for case in places %}
+                {% set p = case.place %}
+                <label class="siege {{ case.libre ? 'libre' : 'pris' }} {{ p.typePlace == 'PMR' ? 'pmr' }}" title="Place {{ p.libelle }}{{ p.typePlace == 'PMR' ? ' (PMR)' }}{{ case.libre ? '' : ' - déjà prise' }}">
+                    {{ p.numero }}
+                    {% if selection and case.libre %}<input type="checkbox" name="places[]" value="{{ p.id }}" aria-label="Place {{ p.libelle }}">{% endif %}
+                </label>
+            {% endfor %}
+        </div>
+    {% endfor %}
+    <div class="legende">
+        <span><span class="siege" style="display:inline-grid;width:1rem;height:1rem;"></span> libre</span>
+        <span><span class="siege pris" style="display:inline-grid;width:1rem;height:1rem;"></span> prise</span>
+        <span><span class="siege pmr" style="display:inline-grid;width:1rem;height:1rem;"></span> PMR</span>
+        {% if selection %}<span><span class="siege" style="display:inline-grid;width:1rem;height:1rem;background:var(--accent);"></span> votre choix</span>{% endif %}
+    </div>
+</div>

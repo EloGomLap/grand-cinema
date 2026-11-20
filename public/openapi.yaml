@@ -16,6 +16,8 @@ tags:
     description: Banque de films du cinéma
   - name: Séances
     description: Salles et programmation des séances
+  - name: Réservations
+    description: Places, réservations, paiement et billets
 paths:
   /api/films:
     get:
@@ -186,6 +188,20 @@ paths:
                     creneauxLibres: [{ debut: '10:00', fin: '14:00', minutes: 240 }, { debut: '17:01', fin: '23:59', minutes: 418 }]
         '401': { $ref: '#/components/responses/NonAuthentifie' }
         '403': { $ref: '#/components/responses/AccesRefuse' }
+  /api/seances/{id}/places:
+    get:
+      tags: [Réservations]
+      summary: Places d'une séance et places restantes
+      description: Une place est prise si elle figure dans une réservation payée ou en cours de paiement.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: État de chaque place de la salle
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlanSeance' }
+        '404': { $ref: '#/components/responses/Introuvable' }
 components:
   securitySchemes:
     basicAuth:
@@ -246,6 +262,24 @@ components:
         debut: { type: string, example: '2026-12-01T20:30', description: AAAA-MM-JJTHH:MM, heure de Paris }
         langue: { type: string, enum: [VF, VOSTFR], default: VF }
         prix: { type: number, example: 9.5 }
+    PlanSeance:
+      type: object
+      properties:
+        seanceId: { type: integer }
+        capacite: { type: integer, example: 60 }
+        placesRestantes: { type: integer, example: 42 }
+        complet: { type: boolean }
+        places:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: integer }
+              libelle: { type: string, example: C7 }
+              rang: { type: string, example: C }
+              numero: { type: integer, example: 7 }
+              type: { type: string, enum: [STANDARD, PMR, PREMIUM] }
+              libre: { type: boolean }
     Erreur:
       type: object
       properties:

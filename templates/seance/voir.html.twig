@@ -14,5 +14,14 @@
         </p>
         <p>Prix de la place : <strong>{{ seance.prix|number_format(2, ',', ' ') }} €</strong></p>
         <p><a href="{{ path('film_voir', {id: seance.film.id}) }}">Fiche du film</a></p>
+        <p class="places-restantes">
+            {% if restantes == 0 %}<span class="badge ko">Complet</span>
+            {% else %}<span class="badge {{ restantes <= 10 ? 'ko' : 'ok' }}">{{ restantes }} place{{ restantes > 1 ? 's' }} restante{{ restantes > 1 ? 's' }} sur {{ seance.salle.capacite }}</span>{% endif %}
+        </p>
     </article>
+
+    <section class="carte" style="margin-top: 1rem;">
+        <h2>Plan de la salle</h2>
+        {% include 'seance/_plan.html.twig' with {plan: plan, selection: false} %}
+    </section>
 {% endblock %}

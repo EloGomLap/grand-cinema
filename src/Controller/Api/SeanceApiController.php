@@ -10,6 +10,7 @@ use App\Repository\SalleRepository;
 use App\Repository\SeanceRepository;
 use App\Controller\ProgrammationController;
 use App\Service\DisponibiliteService;
+use App\Service\PlacesService;
 use App\Service\SeanceService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -30,7 +31,14 @@ class SeanceApiController extends AbstractApiController
         private readonly SeanceService $seanceService,
         private readonly DisponibiliteService $disponibiliteService,
         private readonly FilmRepository $filmRepository,
+        private readonly PlacesService $placesService,
     ) {
+    }
+
+    #[Route('/seances/{id}/places', name: 'api_seance_places', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function places(int $id): JsonResponse
+    {
+        return $this->reponse($this->placesService->enTableau($this->trouverSeance($id)));
     }
 
     #[Route('/seances', name: 'api_seance_liste', methods: ['GET'])]
