@@ -20,6 +20,8 @@ tags:
     description: Places, réservations, paiement et billets
   - name: Comptes
     description: Comptes clients
+  - name: Contrôle
+    description: Validation des billets à l'entrée des salles
 paths:
   /api/films:
     get:
@@ -322,6 +324,26 @@ paths:
             application/json:
               example: { id: 6, email: camille@exemple.fr, prenom: Camille, nom: Moreau, role: CLIENT }
         '400': { $ref: '#/components/responses/DonneesInvalides' }
+  /api/billets/{code}/validation:
+    post:
+      tags: [Contrôle]
+      summary: Valider un billet scanné (CONTROLEUR)
+      description: |
+        Un billet est accepté une seule fois, s'il est payé, à partir d'une heure avant
+        le début de la séance et jusqu'à sa fin.
+      security: [{ basicAuth: [] }]
+      parameters:
+        - { name: code, in: path, required: true, schema: { type: string }, description: Code lu dans le QR code }
+      responses:
+        '200':
+          description: Billet valide, entrée autorisée (le billet est marqué comme utilisé)
+          content:
+            application/json:
+              example: { resultat: VALIDE, accepte: true, message: 'Billet valide - Salle 1, place A1.', billet: { code: 3f9a1c0d5e7b4a2f8c6d1e0b9a7f5c3d, place: A1, utilise: true, film: Whiplash, salle: Salle 1, debut: '2026-11-21T20:00:00+01:00' } }
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '403': { $ref: '#/components/responses/AccesRefuse' }
+        '404': { description: Billet inconnu }
+        '409': { description: 'Entrée refusée : billet déjà utilisé, non payé, trop tôt ou séance terminée (champ resultat)' }
 components:
   securitySchemes:
     basicAuth:
