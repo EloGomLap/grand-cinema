@@ -66,6 +66,7 @@
         {% if is_granted('ROLE_PROGRAMMATEUR') %}<a href="{{ path('programmation_seances') }}">Programmation</a>{% endif %}
         {% if is_granted('ROLE_ADMIN') %}<a href="{{ path('admin_utilisateurs') }}">Comptes</a>{% endif %}
         {% if app.user %}
+            <a href="{{ path('compte_billets') }}">Mes billets</a>
             <span class="meta">{{ app.user.prenom }} {{ app.user.nom }} ({{ app.user.role|lower }})</span>
             <a href="{{ path('app_logout') }}">Déconnexion</a>
         {% else %}
