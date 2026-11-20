@@ -56,6 +56,9 @@
         .resultat-controle.refuse { background: rgba(255, 122, 107, .18); border: 2px solid var(--erreur); }
         tr.commencee { opacity: .55; }
         @media print { header, .flash, button, .meta { display: none !important; } body { background: #fff; color: #000; } .carte { border: 1px solid #000; } }
+        .jauge { display: inline-block; width: 90px; height: .6rem; background: #2e2a3a; border-radius: 999px; overflow: hidden; vertical-align: middle; }
+        .jauge span { display: block; height: 100%; background: var(--accent); }
+        .indicateur strong { font-size: 1.6rem; }
         .tableau { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
         .tableau th, .tableau td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid #2e2a3a; vertical-align: middle; }
         .tableau th { color: var(--doux); font-weight: 600; font-size: .9rem; }
@@ -73,7 +76,7 @@
         <a href="{{ path('api_doc') }}">API (Swagger)</a>
         {% if is_granted('ROLE_GUICHETIER') %}<a href="{{ path('guichet_index') }}">Guichet</a>{% endif %}
         {% if is_granted('ROLE_CONTROLEUR') %}<a href="{{ path('controle_index') }}">Contrôle</a>{% endif %}
-        {% if is_granted('ROLE_PROGRAMMATEUR') %}<a href="{{ path('programmation_seances') }}">Programmation</a>{% endif %}
+        {% if is_granted('ROLE_PROGRAMMATEUR') %}<a href="{{ path('programmation_seances') }}">Programmation</a> <a href="{{ path('pilotage_index') }}">Pilotage</a>{% endif %}
         {% if is_granted('ROLE_ADMIN') %}<a href="{{ path('admin_utilisateurs') }}">Comptes</a>{% endif %}
         {% if app.user %}
             <a href="{{ path('compte_billets') }}">Mes billets</a>
