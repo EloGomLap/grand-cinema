@@ -59,6 +59,10 @@
         .jauge { display: inline-block; width: 90px; height: .6rem; background: #2e2a3a; border-radius: 999px; overflow: hidden; vertical-align: middle; }
         .jauge span { display: block; height: 100%; background: var(--accent); }
         .indicateur strong { font-size: 1.6rem; }
+        .histogramme { display: flex; gap: .3rem; align-items: stretch; height: 160px; margin-bottom: 1rem; overflow-x: auto; }
+        .histogramme .barre { flex: 1 0 34px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; font-size: .75rem; }
+        .histogramme .baton { width: 70%; background: var(--accent); border-radius: 4px 4px 0 0; min-height: 2px; }
+        .histogramme .jour, .histogramme .valeur { color: var(--doux); }
         .tableau { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
         .tableau th, .tableau td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid #2e2a3a; vertical-align: middle; }
         .tableau th { color: var(--doux); font-weight: 600; font-size: .9rem; }

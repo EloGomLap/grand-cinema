@@ -66,6 +66,60 @@ class PilotageService
         ];
     }
 
+    /**
+     * User story « Pilotage - Suivre la fréquentation » : entrées (billets payés) par jour et par film,
+     * part de la vente en ligne (objectif du projet : réduire les files au guichet), recettes,
+     * et entrées réellement contrôlées en salle.
+     *
+     * @return array{entrees: int, recettes: float, partEnLigne: float, controlees: int, parJour: list<array{jour: string, entrees: int, recettes: float}>, parFilm: list<array{film: string, entrees: int}>, parCanal: array<string, int>}
+     */
+    public function frequentation(\DateTimeImmutable $du, \DateTimeImmutable $au): array
+    {
+        $billets = $this->entityManager->createQueryBuilder()
+            ->select('b', 'r', 's', 'f')->from(\App\Entity\Billet::class, 'b')
+            ->join('b.reservation', 'r')->join('b.seance', 's')->join('s.film', 'f')
+            ->andWhere('r.statut = :payee')
+            ->andWhere('s.dateHeureDebut >= :du AND s.dateHeureDebut < :au')
+            ->setParameter('payee', Reservation::STATUT_PAYEE)
+            ->setParameter('du', $du->setTime(0, 0))
+            ->setParameter('au', $au->setTime(0, 0)->modify('+1 day'))
+            ->getQuery()->getResult();
+
+        $parJour = $parFilm = [];
+        $parCanal = ['EN_LIGNE' => 0, 'GUICHET' => 0];
+        $recettes = 0.0;
+        $controlees = 0;
+        for ($jour = $du->setTime(0, 0); $jour <= $au; $jour = $jour->modify('+1 day')) {
+            $parJour[$jour->format('Y-m-d')] = ['jour' => $jour->format('Y-m-d'), 'entrees' => 0, 'recettes' => 0.0];
+        }
+        foreach ($billets as $billet) {
+            $seance = $billet->getSeance();
+            $prix = (float) $seance->getPrix();
+            $jour = $seance->getDateHeureDebut()->format('Y-m-d');
+            ++$parJour[$jour]['entrees'];
+            $parJour[$jour]['recettes'] += $prix;
+            $titre = $seance->getFilm()->getTitre();
+            $parFilm[$titre] = ($parFilm[$titre] ?? 0) + 1;
+            ++$parCanal[$billet->getReservation()->getCanal()];
+            $recettes += $prix;
+            if (null !== $billet->getDateValidation()) {
+                ++$controlees;
+            }
+        }
+        arsort($parFilm);
+        $entrees = count($billets);
+
+        return [
+            'entrees' => $entrees,
+            'recettes' => round($recettes, 2),
+            'partEnLigne' => self::taux($parCanal['EN_LIGNE'], $entrees),
+            'controlees' => $controlees,
+            'parJour' => array_values($parJour),
+            'parFilm' => array_map(static fn (string $film, int $nb) => ['film' => $film, 'entrees' => $nb], array_keys($parFilm), $parFilm),
+            'parCanal' => $parCanal,
+        ];
+    }
+
     public static function taux(int $vendues, int $capacite): float
     {
         return 0 === $capacite ? 0.0 : round(100 * $vendues / $capacite, 1);

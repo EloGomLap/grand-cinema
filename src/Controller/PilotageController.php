@@ -29,6 +29,7 @@ class PilotageController extends AbstractController
             'du' => $du,
             'au' => $au,
             'remplissage' => $this->pilotageService->tauxRemplissage($du, $au),
+            'frequentation' => $this->pilotageService->frequentation($du, $au),
         ]);
     }
 
