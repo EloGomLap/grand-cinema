@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Guichet - {{ seance.film.titre }} {{ seance.dateHeureDebut|date('H:i') }}{% endblock %}
+
+{% block body %}
+    <p><a href="{{ path('guichet_index', {date: seance.dateHeureDebut|date('Y-m-d')}) }}">&larr; Séances du jour</a></p>
+    <h1>{{ seance.film.titre }} - {{ seance.dateHeureDebut|date('d/m H:i') }}</h1>
+    <p>{{ seance.salle.nom }} - {{ seance.langue }} - {{ seance.prix|number_format(2, ',', ' ') }} € la place</p>
+    <p class="places-restantes">
+        {% if restantes == 0 %}<span class="badge ko">Complet</span>
+        {% else %}<span class="badge {{ restantes <= 10 ? 'ko' : 'ok' }}">{{ restantes }} place{{ restantes > 1 ? 's' }} restante{{ restantes > 1 ? 's' }} sur {{ seance.salle.capacite }}</span>{% endif %}
+    </p>
+    <section class="carte">
+        {% include 'seance/_plan.html.twig' with {plan: plan, selection: false} %}
+    </section>
+{% endblock %}
