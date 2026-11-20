@@ -42,6 +42,23 @@ class CompteService
     }
 
     /**
+     * User story « Compte client - Créer un compte client » : inscription libre, rôle CLIENT.
+     *
+     * @param array<string, mixed> $donnees nom, prenom, email, motDePasse
+     *
+     * @throws DonneesInvalidesException
+     */
+    public function inscrireClient(array $donnees): Utilisateur
+    {
+        $erreurs = [];
+        if (array_key_exists('confirmation', $donnees) && ($donnees['confirmation'] ?? null) !== ($donnees['motDePasse'] ?? null)) {
+            $erreurs['confirmation'] = 'Les deux mots de passe ne correspondent pas.';
+        }
+
+        return $this->creerCompte($donnees, 'CLIENT', $erreurs);
+    }
+
+    /**
      * Change le rôle d'un compte. Un administrateur ne peut pas retirer ses propres droits,
      * pour éviter de se retrouver sans aucun administrateur.
      *

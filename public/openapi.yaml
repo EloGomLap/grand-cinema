@@ -18,6 +18,8 @@ tags:
     description: Salles et programmation des séances
   - name: Réservations
     description: Places, réservations, paiement et billets
+  - name: Comptes
+    description: Comptes clients
 paths:
   /api/films:
     get:
@@ -282,6 +284,30 @@ paths:
         '402': { description: Paiement refusé par la banque }
         '403': { $ref: '#/components/responses/AccesRefuse' }
         '409': { description: Réservation déjà payée ou délai de paiement (15 min) dépassé }
+  /api/comptes:
+    post:
+      tags: [Comptes]
+      summary: Créer un compte client
+      description: Inscription libre. Le compte créé a toujours le rôle CLIENT.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prenom, nom, email, motDePasse]
+              properties:
+                prenom: { type: string, example: Camille }
+                nom: { type: string, example: Moreau }
+                email: { type: string, format: email, example: camille@exemple.fr }
+                motDePasse: { type: string, minLength: 8, example: cinema2026 }
+      responses:
+        '201':
+          description: Compte créé
+          content:
+            application/json:
+              example: { id: 6, email: camille@exemple.fr, prenom: Camille, nom: Moreau, role: CLIENT }
+        '400': { $ref: '#/components/responses/DonneesInvalides' }
 components:
   securitySchemes:
     basicAuth:
