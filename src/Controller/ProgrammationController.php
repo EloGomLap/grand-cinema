@@ -7,6 +7,7 @@ use App\Exception\DonneesInvalidesException;
 use App\Repository\FilmRepository;
 use App\Repository\SalleRepository;
 use App\Repository\SeanceRepository;
+use App\Service\DisponibiliteService;
 use App\Service\SeanceService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,7 +27,29 @@ class ProgrammationController extends AbstractController
         private readonly FilmRepository $filmRepository,
         private readonly SalleRepository $salleRepository,
         private readonly SeanceService $seanceService,
+        private readonly DisponibiliteService $disponibiliteService,
     ) {
+    }
+
+    #[Route('/salles', name: 'programmation_salles', methods: ['GET'])]
+    public function disponibilite(Request $request): Response
+    {
+        $jour = self::lireJour($request->query->getString('date'));
+
+        return $this->render('programmation/disponibilite.html.twig', [
+            'jour' => $jour,
+            'lignes' => $this->disponibiliteService->pourLaJournee($jour),
+        ]);
+    }
+
+    /**
+     * Jour demandé (AAAA-MM-JJ), aujourd'hui par défaut ou si la date est invalide.
+     */
+    public static function lireJour(string $valeur): \DateTimeImmutable
+    {
+        $jour = \DateTimeImmutable::createFromFormat('!Y-m-d', $valeur);
+
+        return false !== $jour && $jour->format('Y-m-d') === $valeur ? $jour : new \DateTimeImmutable('today');
     }
 
     #[Route('/seances', name: 'programmation_seances', methods: ['GET', 'POST'])]

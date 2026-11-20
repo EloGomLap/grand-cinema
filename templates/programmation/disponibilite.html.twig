@@ -1,0 +1,34 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Disponibilité des salles{% endblock %}
+
+{% block body %}
+    <p><a href="{{ path('programmation_seances') }}">&larr; Programmation des séances</a></p>
+    <h1>Disponibilité des salles</h1>
+
+    <form method="get" class="filtres">
+        <a class="bouton secondaire" href="{{ path('programmation_salles', {date: jour|date_modify('-1 day')|date('Y-m-d')}) }}" aria-label="Jour précédent">&larr;</a>
+        <input type="date" name="date" value="{{ jour|date('Y-m-d') }}" aria-label="Jour">
+        <button class="bouton secondaire" type="submit">Afficher</button>
+        <a class="bouton secondaire" href="{{ path('programmation_salles', {date: jour|date_modify('+1 day')|date('Y-m-d')}) }}" aria-label="Jour suivant">&rarr;</a>
+    </form>
+    <p class="meta">Journée du {{ jour|date('d/m/Y') }} - ouverture 10:00, fermeture minuit. Chaque séance occupe la salle pendant le film plus 20 minutes.</p>
+
+    <div class="grille">
+        {% for ligne in lignes %}
+            <article class="carte salle-dispo">
+                <h2>{{ ligne.salle.nom }} <span class="meta">({{ ligne.salle.capacite }} places)</span></h2>
+                <h3 class="meta">Occupée</h3>
+                {% for s in ligne.seances %}
+                    <div><span class="badge ko">{{ s.dateHeureDebut|date('H:i') }} - {{ s.dateHeureFin|date('H:i') }}</span> {{ s.film.titre }}</div>
+                {% else %}
+                    <div class="meta">Aucune séance</div>
+                {% endfor %}
+                <h3 class="meta">Libre</h3>
+                {% for c in ligne.libres %}
+                    <div><span class="badge ok">{{ c.debut|date('H:i') }} - {{ c.fin|date('H:i') }}</span> <span class="meta">{{ (c.minutes // 60) }} h {{ '%02d'|format(c.minutes % 60) }}</span></div>
+                {% endfor %}
+            </article>
+        {% endfor %}
+    </div>
+{% endblock %}
