@@ -15,7 +15,10 @@ use Symfony\Component\Security\Core\User\UserInterface;
 #[ORM\Table(name: 'utilisateur')]
 class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
 {
-    public const ROLES = ['CLIENT', 'GUICHETIER', 'PROGRAMMATEUR', 'ADMIN'];
+    public const ROLES = ['CLIENT', 'GUICHETIER', 'CONTROLEUR', 'PROGRAMMATEUR', 'ADMIN'];
+
+    /** Rôles attribuables au personnel du cinéma par un administrateur */
+    public const ROLES_PERSONNEL = ['GUICHETIER', 'CONTROLEUR', 'PROGRAMMATEUR', 'ADMIN'];
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -100,6 +103,16 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         $this->role = $role;
 
         return $this;
+    }
+
+    public function estPersonnel(): bool
+    {
+        return in_array($this->role, self::ROLES_PERSONNEL, true);
+    }
+
+    public function getNomComplet(): string
+    {
+        return trim($this->prenom.' '.$this->nom);
     }
 
     public function getDateCreation(): \DateTimeImmutable

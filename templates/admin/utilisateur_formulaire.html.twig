@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouveau compte du personnel{% endblock %}
+
+{% block body %}
+    <p><a href="{{ path('admin_utilisateurs') }}">&larr; Retour aux comptes</a></p>
+    <h1>Créer un compte du personnel</h1>
+
+    {% if erreurs is not empty %}<div class="flash erreur">Le formulaire contient des erreurs.</div>{% endif %}
+
+    <form method="post" class="formulaire" novalidate>
+        <input type="hidden" name="_token" value="{{ csrf_token('compte_personnel') }}">
+        {% for champ, libelle in {prenom: 'Prénom', nom: 'Nom', email: 'Email'} %}
+            <label>{{ libelle }}
+                <input type="{{ champ == 'email' ? 'email' : 'text' }}" name="compte[{{ champ }}]" value="{{ donnees[champ] ?? '' }}" required>
+                {% if erreurs[champ] is defined %}<span class="erreur-champ">{{ erreurs[champ] }}</span>{% endif %}
+            </label>
+        {% endfor %}
+        <label>Mot de passe provisoire (8 caractères minimum)
+            <input type="password" name="compte[motDePasse]" required minlength="8" autocomplete="new-password">
+            {% if erreurs.motDePasse is defined %}<span class="erreur-champ">{{ erreurs.motDePasse }}</span>{% endif %}
+        </label>
+        <label>Rôle
+            <select name="compte[role]">
+                {% for r in roles %}<option value="{{ r }}" {{ (donnees.role ?? '') == r ? 'selected' }}>{{ r|lower }}</option>{% endfor %}
+            </select>
+            {% if erreurs.role is defined %}<span class="erreur-champ">{{ erreurs.role }}</span>{% endif %}
+        </label>
+        <div class="actions"><button class="bouton" type="submit">Créer le compte</button></div>
+    </form>
+{% endblock %}

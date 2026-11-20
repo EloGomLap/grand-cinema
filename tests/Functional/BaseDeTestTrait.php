@@ -28,7 +28,14 @@ trait BaseDeTestTrait
         $outil->createSchema($metadonnees);
 
         $hasher = static::getContainer()->get('security.user_password_hasher');
-        foreach (['programmateur@test.fr' => 'PROGRAMMATEUR', 'client@test.fr' => 'CLIENT'] as $email => $role) {
+        $comptes = [
+            'admin@test.fr' => 'ADMIN',
+            'programmateur@test.fr' => 'PROGRAMMATEUR',
+            'guichetier@test.fr' => 'GUICHETIER',
+            'controleur@test.fr' => 'CONTROLEUR',
+            'client@test.fr' => 'CLIENT',
+        ];
+        foreach ($comptes as $email => $role) {
             $u = (new Utilisateur())->setNom('Test')->setPrenom($role)->setEmail($email)->setRole($role);
             $u->setMotDePasse($hasher->hashPassword($u, 'motdepasse'));
             $this->em->persist($u);

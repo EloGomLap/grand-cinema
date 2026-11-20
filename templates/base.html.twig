@@ -31,6 +31,12 @@
         input, textarea, select { font: inherit; padding: .55rem .7rem; border-radius: 6px; border: 1px solid #4a4458; background: #15131c; color: var(--texte); }
         .actions { display: flex; gap: .7rem; flex-wrap: wrap; align-items: center; }
         .filtres { display: flex; gap: .5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+        .tableau { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+        .tableau th, .tableau td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid #2e2a3a; vertical-align: middle; }
+        .tableau th { color: var(--doux); font-weight: 600; font-size: .9rem; }
+        .badge { display: inline-block; padding: .1rem .5rem; border-radius: 999px; background: #2e2a3a; font-size: .85rem; }
+        .badge.ok { background: rgba(111, 208, 140, .2); color: var(--ok); }
+        .badge.ko { background: rgba(255, 122, 107, .2); color: var(--erreur); }
     </style>
 </head>
 <body>
@@ -39,6 +45,7 @@
     <nav>
         <a href="{{ path('film_index') }}">Banque de films</a>
         <a href="{{ path('api_doc') }}">API (Swagger)</a>
+        {% if is_granted('ROLE_ADMIN') %}<a href="{{ path('admin_utilisateurs') }}">Comptes</a>{% endif %}
         {% if app.user %}
             <span class="meta">{{ app.user.prenom }} {{ app.user.nom }} ({{ app.user.role|lower }})</span>
             <a href="{{ path('app_logout') }}">Déconnexion</a>
@@ -50,6 +57,9 @@
 <main>
     {% for message in app.flashes('succes') %}
         <div class="flash succes">{{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('erreur') %}
+        <div class="flash erreur">{{ message }}</div>
     {% endfor %}
     {% block body %}{% endblock %}
 </main>

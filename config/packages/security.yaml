@@ -9,11 +9,12 @@ security:
                 class: App\Entity\Utilisateur
                 property: email
 
-    # Un administrateur hérite des droits du programmateur et du guichetier
+    # Un administrateur hérite des droits de tout le personnel
     role_hierarchy:
-        ROLE_ADMIN: [ROLE_PROGRAMMATEUR, ROLE_GUICHETIER]
+        ROLE_ADMIN: [ROLE_PROGRAMMATEUR, ROLE_GUICHETIER, ROLE_CONTROLEUR]
         ROLE_PROGRAMMATEUR: [ROLE_USER]
         ROLE_GUICHETIER: [ROLE_USER]
+        ROLE_CONTROLEUR: [ROLE_USER]
         ROLE_CLIENT: [ROLE_USER]
 
     firewalls:
