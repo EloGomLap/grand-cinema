@@ -25,6 +25,12 @@
                         <div><strong>{{ s.dateHeureDebut|date('H:i') }}</strong> <span class="meta">fin vers {{ s.dateHeureDebut|date_modify('+' ~ s.film.dureeMinutes ~ ' minutes')|date('H:i') }}</span></div>
                         <div class="meta">{{ s.salle.nom }} - {{ s.langue }} - {{ s.film.dureeFormatee }}</div>
                         <div>{{ s.prix|number_format(2, ',', ' ') }} €</div>
+                        {% set reste = restantes[s.id] ?? s.salle.capacite %}
+                        <div class="places-restantes">
+                            {% if reste == 0 %}<span class="badge ko">Complet</span>
+                            {% elseif reste <= 10 %}<span class="badge ko">Plus que {{ reste }} place{{ reste > 1 ? 's' }}</span>
+                            {% else %}<span class="badge ok">{{ reste }} places disponibles</span>{% endif %}
+                        </div>
                     </article>
                 {% endfor %}
             </div>

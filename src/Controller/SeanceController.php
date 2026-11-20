@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Seance;
 use App\Repository\FilmRepository;
 use App\Repository\SeanceRepository;
+use App\Service\PlacesService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,6 +20,7 @@ class SeanceController extends AbstractController
     public function __construct(
         private readonly SeanceRepository $seanceRepository,
         private readonly FilmRepository $filmRepository,
+        private readonly PlacesService $placesService,
     ) {
     }
 
@@ -29,13 +31,15 @@ class SeanceController extends AbstractController
         $jour = '' !== $date ? ProgrammationController::lireJour($date) : null;
         $film = $request->query->getInt('film') > 0 ? $this->filmRepository->find($request->query->getInt('film')) : null;
 
+        $seances = $this->seanceRepository->aVenir($jour, $film);
         $parJour = [];
-        foreach ($this->seanceRepository->aVenir($jour, $film) as $seance) {
+        foreach ($seances as $seance) {
             $parJour[$seance->getDateHeureDebut()->format('Y-m-d')][] = $seance;
         }
 
         return $this->render('seance/index.html.twig', [
             'parJour' => $parJour,
+            'restantes' => $this->placesService->placesRestantesPour($seances),
             'jour' => $jour,
             'filmChoisi' => $film,
             'films' => $this->filmRepository->rechercher(),
@@ -45,7 +49,13 @@ class SeanceController extends AbstractController
     #[Route('/{id}', name: 'seance_voir', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function voir(int $id): Response
     {
-        return $this->render('seance/voir.html.twig', ['seance' => $this->trouverSeance($id)]);
+        $seance = $this->trouverSeance($id);
+
+        return $this->render('seance/voir.html.twig', [
+            'seance' => $seance,
+            'plan' => $this->placesService->plan($seance),
+            'restantes' => $this->placesService->placesRestantes($seance),
+        ]);
     }
 
     protected function trouverSeance(int $id): Seance
