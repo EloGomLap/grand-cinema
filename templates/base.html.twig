@@ -54,6 +54,7 @@
         .resultat-controle strong { font-size: 1.6rem; display: block; }
         .resultat-controle.accepte { background: rgba(111, 208, 140, .2); border: 2px solid var(--ok); }
         .resultat-controle.refuse { background: rgba(255, 122, 107, .18); border: 2px solid var(--erreur); }
+        tr.commencee { opacity: .55; }
         .tableau { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
         .tableau th, .tableau td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid #2e2a3a; vertical-align: middle; }
         .tableau th { color: var(--doux); font-weight: 600; font-size: .9rem; }
@@ -69,6 +70,7 @@
         <a href="{{ path('seance_index') }}">Séances</a>
         <a href="{{ path('film_index') }}">Films</a>
         <a href="{{ path('api_doc') }}">API (Swagger)</a>
+        {% if is_granted('ROLE_GUICHETIER') %}<a href="{{ path('guichet_index') }}">Guichet</a>{% endif %}
         {% if is_granted('ROLE_CONTROLEUR') %}<a href="{{ path('controle_index') }}">Contrôle</a>{% endif %}
         {% if is_granted('ROLE_PROGRAMMATEUR') %}<a href="{{ path('programmation_seances') }}">Programmation</a>{% endif %}
         {% if is_granted('ROLE_ADMIN') %}<a href="{{ path('admin_utilisateurs') }}">Comptes</a>{% endif %}
