@@ -19,4 +19,18 @@
             <p><a class="bouton" href="{{ path('reservation_paiement', {id: reservation.id}) }}">Payer {{ reservation.montantTotal|number_format(2, ',', ' ') }} €</a></p>
         {% endif %}
     </article>
+
+    {% if reservation.estPayee %}
+        <h2>Vos billets</h2>
+        {% if reservation.utilisateur %}<p class="meta">Ils vous ont aussi été envoyés par email à {{ reservation.utilisateur.email }}.</p>{% endif %}
+        <div class="billets">
+            {% for b in reservation.billets %}
+                <article class="carte billet">
+                    <div>Place <strong>{{ b.place.libelle }}</strong></div>
+                    {% include 'billet/_qr.html.twig' with {code: b.code} %}
+                    <a href="{{ path('billet_voir', {code: b.code}) }}">Ouvrir le billet</a>
+                </article>
+            {% endfor %}
+        </div>
+    {% endif %}
 {% endblock %}

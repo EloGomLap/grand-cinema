@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Reservation;
 use App\Exception\DonneesInvalidesException;
+use App\Notification\BilletNotifier;
 use App\Paiement\PaiementRefuseException;
 use App\Paiement\PasserellePaiementInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -19,6 +20,7 @@ class PaiementService
         private readonly EntityManagerInterface $entityManager,
         private readonly PasserellePaiementInterface $passerelle,
         private readonly ReservationService $reservationService,
+        private readonly BilletNotifier $billetNotifier,
     ) {
     }
 
@@ -55,6 +57,8 @@ class PaiementService
 
         $reservation->marquerPayee('CB_EN_LIGNE', $maintenant);
         $this->entityManager->flush();
+
+        $this->billetNotifier->envoyerBillets($reservation);
     }
 
     /**

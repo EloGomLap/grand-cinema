@@ -1,0 +1,8 @@
+{% set s = reservation.seance %}
+<p>Bonjour {{ reservation.utilisateur.prenom }},</p>
+<p>Merci pour votre réservation n°{{ reservation.id }} au Grand Cinéma.</p>
+<p><strong>{{ s.film.titre }}</strong> - {{ s.dateHeureDebut|date('d/m/Y à H:i') }} - {{ s.salle.nom }}</p>
+<ul>
+    {% for place, lien in liens %}<li>Place {{ place }} : <a href="{{ lien }}">afficher le billet</a></li>{% endfor %}
+</ul>
+<p>Présentez le QR code de chaque billet à l'entrée de la salle.</p>
