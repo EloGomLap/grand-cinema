@@ -31,19 +31,64 @@
         input, textarea, select { font: inherit; padding: .55rem .7rem; border-radius: 6px; border: 1px solid #4a4458; background: #15131c; color: var(--texte); }
         .actions { display: flex; gap: .7rem; flex-wrap: wrap; align-items: center; }
         .filtres { display: flex; gap: .5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+        .affiche { max-width: 220px; border-radius: 8px; }
+        ul.seances { list-style: none; padding: 0; display: grid; gap: .4rem; }
+        .plan { display: grid; gap: .35rem; justify-content: center; margin: 1rem 0; }
+        .plan .ecran { text-align: center; color: var(--doux); border-top: 3px solid var(--doux); padding-top: .2rem; margin-bottom: .6rem; font-size: .85rem; }
+        .plan .rang { display: flex; gap: .35rem; align-items: center; }
+        .plan .rang > span { width: 1.4rem; color: var(--doux); font-size: .85rem; }
+        .siege { width: 2.1rem; height: 2.1rem; display: grid; place-items: center; border-radius: 6px 6px 3px 3px; font-size: .7rem; background: #2f6b45; color: #fff; position: relative; }
+        .siege.pris { background: #4a4458; color: #8d869c; text-decoration: line-through; }
+        .siege.pmr { outline: 2px solid #6ba3ff; }
+        .siege input { position: absolute; inset: 0; opacity: 0; cursor: pointer; margin: 0; }
+        .siege:has(input:checked) { background: var(--accent); color: #1a1406; }
+        .legende { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; font-size: .85rem; color: var(--doux); }
+        .billet { text-align: center; max-width: 420px; margin: 0 auto; }
+        .billet.presentation { max-width: none; background: #fff; color: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .billet.presentation #presenter, .billet.presentation .meta { display: none; }
+        .qr { background: #fff; padding: 10px; border-radius: 8px; margin: .6rem auto; box-sizing: content-box; }
+        .qr img, .qr canvas { width: 100%; height: 100%; }
+        .billets { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+        .code { word-break: break-all; font-family: monospace; }
+        .resultat-controle { padding: 1.2rem; border-radius: 10px; margin-bottom: 1rem; font-size: 1.1rem; }
+        .resultat-controle strong { font-size: 1.6rem; display: block; }
+        .resultat-controle.accepte { background: rgba(111, 208, 140, .2); border: 2px solid var(--ok); }
+        .resultat-controle.refuse { background: rgba(255, 122, 107, .18); border: 2px solid var(--erreur); }
+        tr.commencee { opacity: .55; }
+        @media print { header, .flash, button, .meta { display: none !important; } body { background: #fff; color: #000; } .carte { border: 1px solid #000; } }
+        .jauge { display: inline-block; width: 90px; height: .6rem; background: #2e2a3a; border-radius: 999px; overflow: hidden; vertical-align: middle; }
+        .jauge span { display: block; height: 100%; background: var(--accent); }
+        .indicateur strong { font-size: 1.6rem; }
+        .histogramme { display: flex; gap: .3rem; align-items: stretch; height: 160px; margin-bottom: 1rem; overflow-x: auto; }
+        .histogramme .barre { flex: 1 0 34px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; font-size: .75rem; }
+        .histogramme .baton { width: 70%; background: var(--accent); border-radius: 4px 4px 0 0; min-height: 2px; }
+        .histogramme .jour, .histogramme .valeur { color: var(--doux); }
+        .tableau { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+        .tableau th, .tableau td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid #2e2a3a; vertical-align: middle; }
+        .tableau th { color: var(--doux); font-weight: 600; font-size: .9rem; }
+        .badge { display: inline-block; padding: .1rem .5rem; border-radius: 999px; background: #2e2a3a; font-size: .85rem; }
+        .badge.ok { background: rgba(111, 208, 140, .2); color: var(--ok); }
+        .badge.ko { background: rgba(255, 122, 107, .2); color: var(--erreur); }
     </style>
 </head>
 <body>
 <header>
-    <a class="logo" href="{{ path('film_index') }}">Le Grand <span>Cinéma</span></a>
+    <a class="logo" href="{{ path('accueil') }}">Le Grand <span>Cinéma</span></a>
     <nav>
-        <a href="{{ path('film_index') }}">Banque de films</a>
+        <a href="{{ path('seance_index') }}">Séances</a>
+        <a href="{{ path('film_index') }}">Films</a>
         <a href="{{ path('api_doc') }}">API (Swagger)</a>
+        {% if is_granted('ROLE_GUICHETIER') %}<a href="{{ path('guichet_index') }}">Guichet</a>{% endif %}
+        {% if is_granted('ROLE_CONTROLEUR') %}<a href="{{ path('controle_index') }}">Contrôle</a>{% endif %}
+        {% if is_granted('ROLE_PROGRAMMATEUR') %}<a href="{{ path('programmation_seances') }}">Programmation</a> <a href="{{ path('pilotage_index') }}">Pilotage</a>{% endif %}
+        {% if is_granted('ROLE_ADMIN') %}<a href="{{ path('admin_utilisateurs') }}">Comptes</a>{% endif %}
         {% if app.user %}
+            <a href="{{ path('compte_billets') }}">Mes billets</a>
             <span class="meta">{{ app.user.prenom }} {{ app.user.nom }} ({{ app.user.role|lower }})</span>
             <a href="{{ path('app_logout') }}">Déconnexion</a>
         {% else %}
             <a href="{{ path('app_login') }}">Connexion</a>
+            <a href="{{ path('compte_inscription') }}">Créer un compte</a>
         {% endif %}
     </nav>
 </header>
@@ -51,7 +96,20 @@
     {% for message in app.flashes('succes') %}
         <div class="flash succes">{{ message }}</div>
     {% endfor %}
+    {% for message in app.flashes('erreur') %}
+        <div class="flash erreur">{{ message }}</div>
+    {% endfor %}
     {% block body %}{% endblock %}
 </main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+<script>
+    // Dessine les QR codes des billets présents dans la page
+    window.addEventListener('load', function () {
+        if (typeof QRCode === 'undefined') { return; }
+        document.querySelectorAll('.qr[data-code]').forEach(function (zone) {
+            new QRCode(zone, { text: zone.dataset.code, width: zone.clientWidth, height: zone.clientHeight, correctLevel: QRCode.CorrectLevel.M });
+        });
+    });
+</script>
 </body>
 </html>

@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Séances - Le Grand Cinéma{% endblock %}
+
+{% block body %}
+    <h1>Séances à l'affiche</h1>
+
+    <form method="get" class="filtres">
+        <input type="date" name="date" value="{{ jour ? jour|date('Y-m-d') }}" aria-label="Jour">
+        <select name="film" aria-label="Film">
+            <option value="">Tous les films</option>
+            {% for f in films %}<option value="{{ f.id }}" {{ filmChoisi and filmChoisi.id == f.id ? 'selected' }}>{{ f.titre }}</option>{% endfor %}
+        </select>
+        <button class="bouton secondaire" type="submit">Filtrer</button>
+        {% if jour or filmChoisi %}<a class="bouton secondaire" href="{{ path('seance_index') }}">Tout afficher</a>{% endif %}
+    </form>
+
+    {% for date, seances in parJour %}
+        <section class="jour">
+            <h2>{{ date|date('d/m/Y') }}</h2>
+            <div class="grille">
+                {% for s in seances %}
+                    <article class="carte seance">
+                        <h3 style="margin: 0 0 .3rem;"><a href="{{ path('seance_voir', {id: s.id}) }}">{{ s.film.titre }}</a></h3>
+                        <div><strong>{{ s.dateHeureDebut|date('H:i') }}</strong> <span class="meta">fin vers {{ s.dateHeureDebut|date_modify('+' ~ s.film.dureeMinutes ~ ' minutes')|date('H:i') }}</span></div>
+                        <div class="meta">{{ s.salle.nom }} - {{ s.langue }} - {{ s.film.dureeFormatee }}</div>
+                        <div>{{ s.prix|number_format(2, ',', ' ') }} €</div>
+                        {% set reste = restantes[s.id] ?? s.salle.capacite %}
+                        <div class="places-restantes">
+                            {% if reste == 0 %}<span class="badge ko">Complet</span>
+                            {% elseif reste <= 10 %}<span class="badge ko">Plus que {{ reste }} place{{ reste > 1 ? 's' }}</span>
+                            {% else %}<span class="badge ok">{{ reste }} places disponibles</span>{% endif %}
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        </section>
+    {% else %}
+        <p class="meta">Aucune séance à venir pour ces critères.</p>
+    {% endfor %}
+{% endblock %}

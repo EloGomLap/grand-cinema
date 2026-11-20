@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Billet {{ billet.place.libelle }} - {{ billet.seance.film.titre }}{% endblock %}
+
+{% block body %}
+    {% set s = billet.seance %}
+    <article class="carte billet" id="billet">
+        <h1>{{ s.film.titre }}</h1>
+        <p><strong>{{ s.dateHeureDebut|date('d/m/Y à H:i') }}</strong> - {{ s.salle.nom }} - {{ s.langue }}</p>
+        <p class="place">Place <strong>{{ billet.place.libelle }}</strong></p>
+        <p class="etat">
+            {% if billet.dateValidation %}<span class="badge ko">Billet utilisé le {{ billet.dateValidation|date('d/m/Y à H:i') }}</span>
+            {% elseif s.dateHeureFin < date() %}<span class="badge ko">Séance terminée</span>
+            {% else %}<span class="badge ok">Billet valable - à présenter à l'entrée de la salle</span>{% endif %}
+        </p>
+        {% include 'billet/_qr.html.twig' with {code: billet.code, taille: 240} %}
+        <p class="meta code">{{ billet.code }}</p>
+        <p><button class="bouton" type="button" id="presenter">Présenter en plein écran</button></p>
+    </article>
+    <script>
+        // Plein écran sur fond blanc : le QR code est plus facile à lire pour le contrôleur
+        document.getElementById('presenter').addEventListener('click', function () {
+            const billet = document.getElementById('billet');
+            billet.classList.add('presentation');
+            if (billet.requestFullscreen) { billet.requestFullscreen(); }
+        });
+        document.addEventListener('fullscreenchange', function () {
+            if (!document.fullscreenElement) { document.getElementById('billet').classList.remove('presentation'); }
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Paiement - Réservation n°{{ reservation.id }}{% endblock %}
+
+{% block body %}
+    {% set s = reservation.seance %}
+    <p><a href="{{ path('reservation_voir', {id: reservation.id}) }}">&larr; Retour à la réservation</a></p>
+    <h1>Paiement sécurisé</h1>
+    <p>{{ s.film.titre }} - {{ s.dateHeureDebut|date('d/m/Y à H:i') }} - {{ reservation.billets|length }} place{{ reservation.billets|length > 1 ? 's' }} :
+        <strong>{{ reservation.montantTotal|number_format(2, ',', ' ') }} €</strong></p>
+
+    {% if erreurs.banque is defined %}<div class="flash erreur">{{ erreurs.banque }}</div>{% elseif erreurs is not empty %}<div class="flash erreur">Vérifiez les informations de votre carte.</div>{% endif %}
+
+    <form method="post" class="formulaire" novalidate autocomplete="off">
+        <input type="hidden" name="_token" value="{{ csrf_token('paiement' ~ reservation.id) }}">
+        <label>Numéro de carte
+            <input type="text" name="carte[numeroCarte]" inputmode="numeric" placeholder="4242 4242 4242 4242" autocomplete="cc-number">
+            {% if erreurs.numeroCarte is defined %}<span class="erreur-champ">{{ erreurs.numeroCarte }}</span>{% endif %}
+        </label>
+        <div class="actions">
+            <label>Expiration
+                <input type="text" name="carte[expiration]" placeholder="MM/AA" size="6" autocomplete="cc-exp">
+                {% if erreurs.expiration is defined %}<span class="erreur-champ">{{ erreurs.expiration }}</span>{% endif %}
+            </label>
+            <label>Cryptogramme
+                <input type="text" name="carte[cvc]" inputmode="numeric" placeholder="123" size="4" autocomplete="cc-csc">
+                {% if erreurs.cvc is defined %}<span class="erreur-champ">{{ erreurs.cvc }}</span>{% endif %}
+            </label>
+        </div>
+        <div class="actions"><button class="bouton" type="submit">Payer {{ reservation.montantTotal|number_format(2, ',', ' ') }} €</button></div>
+        <p class="meta">Environnement de démonstration : carte acceptée 4242 4242 4242 4242, carte refusée 4000 0000 0000 0002 (date future, cryptogramme au choix). Le numéro de carte n'est jamais enregistré.</p>
+    </form>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Guichet - séances du jour{% endblock %}
+
+{% block body %}
+    <h1>Guichet - séances du {{ jour|date('d/m/Y') }}</h1>
+    <form method="get" class="filtres">
+        <input type="date" name="date" value="{{ jour|date('Y-m-d') }}" aria-label="Jour">
+        <button class="bouton secondaire" type="submit">Afficher</button>
+        <a class="bouton secondaire" href="{{ path('guichet_index') }}">Aujourd'hui</a>
+    </form>
+
+    {% if seances is empty %}
+        <p class="meta">Aucune séance ce jour-là.</p>
+    {% else %}
+        <table class="tableau" id="seances-guichet">
+            <thead><tr><th>Horaire</th><th>Film</th><th>Salle</th><th>Langue</th><th>Prix</th><th>Places restantes</th><th>État</th></tr></thead>
+            <tbody>
+            {% for s in seances %}
+                {% set commencee = s.dateHeureDebut <= maintenant %}
+                <tr class="{{ commencee ? 'commencee' }}">
+                    <td><strong>{{ s.dateHeureDebut|date('H:i') }}</strong></td>
+                    <td><a href="{{ path('guichet_seance', {id: s.id}) }}">{{ s.film.titre }}</a> <span class="meta">{{ s.film.dureeFormatee }}{% if s.film.classification %} - {{ s.film.classification }}{% endif %}</span></td>
+                    <td>{{ s.salle.nom }}</td>
+                    <td>{{ s.langue }}</td>
+                    <td>{{ s.prix|number_format(2, ',', ' ') }} €</td>
+                    {% set reste = restantes[s.id] ?? s.salle.capacite %}
+                    <td class="restantes">{% if reste == 0 %}<span class="badge ko">Complet</span>{% else %}<span class="badge {{ reste <= 10 ? 'ko' : 'ok' }}">{{ reste }} / {{ s.salle.capacite }}</span>{% endif %}</td>
+                    <td>{% if commencee %}<span class="badge">Commencée</span>{% else %}<span class="badge ok">À venir</span>{% endif %}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <p class="meta">Les places restantes tiennent compte des ventes en ligne. La page se met à jour toutes les 30 secondes.</p>
+        <script>setTimeout(function () { window.location.reload(); }, 30000);</script>
+    {% endif %}
+{% endblock %}

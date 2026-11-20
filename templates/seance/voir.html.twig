@@ -1,0 +1,55 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ seance.film.titre }} - {{ seance.dateHeureDebut|date('d/m H:i') }}{% endblock %}
+
+{% block body %}
+    <p><a href="{{ path('seance_index') }}">&larr; Toutes les séances</a></p>
+    <article class="carte">
+        <h1>{{ seance.film.titre }}</h1>
+        <p><strong>{{ seance.dateHeureDebut|date('d/m/Y à H:i') }}</strong> - {{ seance.salle.nom }} - {{ seance.langue }}</p>
+        <p class="meta">
+            {{ seance.film.dureeFormatee }}
+            {% if seance.film.genre %} - {{ seance.film.genre }}{% endif %}
+            {% if seance.film.classification %} - {{ seance.film.classification }}{% endif %}
+        </p>
+        <p>Prix de la place : <strong>{{ seance.prix|number_format(2, ',', ' ') }} €</strong></p>
+        <p><a href="{{ path('film_voir', {id: seance.film.id}) }}">Fiche du film</a></p>
+        <p class="places-restantes">
+            {% if restantes == 0 %}<span class="badge ko">Complet</span>
+            {% else %}<span class="badge {{ restantes <= 10 ? 'ko' : 'ok' }}">{{ restantes }} place{{ restantes > 1 ? 's' }} restante{{ restantes > 1 ? 's' }} sur {{ seance.salle.capacite }}</span>{% endif %}
+        </p>
+    </article>
+
+    <section class="carte" style="margin-top: 1rem;">
+        <h2>{{ seance.estPassee ? 'Plan de la salle' : 'Choisissez vos places' }}</h2>
+        {% if erreur ?? false %}<div class="flash erreur">{{ erreur }}</div>{% endif %}
+        {% set reservable = not seance.estPassee and restantes > 0 and is_granted('ROLE_USER') %}
+        {% if reservable %}
+            <form method="post" action="{{ path('seance_reserver', {id: seance.id}) }}" id="form-reservation">
+                <input type="hidden" name="_token" value="{{ csrf_token('reserver' ~ seance.id) }}">
+                {% include 'seance/_plan.html.twig' with {plan: plan, selection: true} %}
+                <div class="actions" style="justify-content: center;">
+                    <span class="meta" id="recap-selection">Aucune place choisie ({{ maxPlaces }} au maximum)</span>
+                    <button class="bouton" type="submit">Réserver les places choisies</button>
+                </div>
+            </form>
+            <script>
+                // Récapitulatif en direct : nombre de places et montant
+                (function () {
+                    const form = document.getElementById('form-reservation');
+                    const recap = document.getElementById('recap-selection');
+                    const prix = {{ seance.prix }};
+                    form.addEventListener('change', function () {
+                        const n = form.querySelectorAll('input[name="places[]"]:checked').length;
+                        recap.textContent = n === 0 ? 'Aucune place choisie' : n + ' place' + (n > 1 ? 's' : '') + ' - ' + (n * prix).toFixed(2).replace('.', ',') + ' €';
+                    });
+                })();
+            </script>
+        {% else %}
+            {% include 'seance/_plan.html.twig' with {plan: plan, selection: false} %}
+            {% if not seance.estPassee and restantes > 0 %}
+                <p style="text-align: center;"><a class="bouton" href="{{ path('app_login') }}">Connectez-vous pour réserver</a></p>
+            {% endif %}
+        {% endif %}
+    </section>
+{% endblock %}

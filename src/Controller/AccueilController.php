@@ -11,7 +11,7 @@ class AccueilController extends AbstractController
     #[Route('/', name: 'accueil')]
     public function index(): Response
     {
-        return $this->redirectToRoute('film_index');
+        return $this->redirectToRoute('seance_index');
     }
 
     /**

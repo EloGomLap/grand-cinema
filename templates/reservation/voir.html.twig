@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Réservation n°{{ reservation.id }}{% endblock %}
+
+{% block body %}
+    {% set s = reservation.seance %}
+    <h1>Réservation n°{{ reservation.id }}</h1>
+    <article class="carte recap">
+        <h2>{{ s.film.titre }}</h2>
+        <p>{{ s.dateHeureDebut|date('d/m/Y à H:i') }} - {{ s.salle.nom }} - {{ s.langue }}</p>
+        <p>Places : <strong>{% for b in reservation.billets %}{{ b.place.libelle }}{{ not loop.last ? ', ' }}{% endfor %}</strong></p>
+        <p>Montant : <strong>{{ reservation.montantTotal|number_format(2, ',', ' ') }} €</strong></p>
+        {% if reservation.canal == 'GUICHET' %}<p class="meta">Vente au guichet{% if reservation.modePaiement %} - {{ {'ESPECES': 'espèces', 'CB': 'carte bancaire', 'CHEQUE': 'chèque'}[reservation.modePaiement] ?? reservation.modePaiement }}{% endif %}</p>{% endif %}
+        <p class="statut">
+            {% if reservation.estPayee %}<span class="badge ok">Payée</span>
+            {% elseif reservation.statut == 'ANNULEE' or expiree %}<span class="badge ko">Expirée : les places ont été libérées</span>
+            {% else %}<span class="badge">En attente de paiement</span> <span class="meta">vos places sont bloquées {{ minutesBlocage }} minutes</span>{% endif %}
+        </p>
+        {% if reservation.estEnAttente and not expiree and reservation.canal == 'EN_LIGNE' %}
+            <p><a class="bouton" href="{{ path('reservation_paiement', {id: reservation.id}) }}">Payer {{ reservation.montantTotal|number_format(2, ',', ' ') }} €</a></p>
+        {% endif %}
+    </article>
+
+    {% if reservation.estPayee %}
+        <h2>Vos billets</h2>
+        {% if reservation.utilisateur %}<p class="meta">Ils vous ont aussi été envoyés par email à {{ reservation.utilisateur.email }}.</p>{% endif %}
+        {% if reservation.canal == 'GUICHET' %}<p><button class="bouton secondaire" type="button" onclick="window.print()">Imprimer les billets</button></p>{% endif %}
+        <div class="billets">
+            {% for b in reservation.billets %}
+                <article class="carte billet">
+                    <div>Place <strong>{{ b.place.libelle }}</strong></div>
+                    {% include 'billet/_qr.html.twig' with {code: b.code} %}
+                    <a href="{{ path('billet_voir', {code: b.code}) }}">Ouvrir le billet</a>
+                </article>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}

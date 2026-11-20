@@ -1,0 +1,28 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Créer un compte - Le Grand Cinéma{% endblock %}
+
+{% block body %}
+    <h1>Créer un compte</h1>
+    <p class="meta">Votre compte vous permet de réserver en ligne et de retrouver tous vos billets.</p>
+    {% if erreurs is not empty %}<div class="flash erreur">Le formulaire contient des erreurs.</div>{% endif %}
+
+    <form method="post" class="formulaire" novalidate>
+        <input type="hidden" name="_token" value="{{ csrf_token('inscription') }}">
+        {% for champ, libelle in {prenom: 'Prénom', nom: 'Nom', email: 'Email'} %}
+            <label>{{ libelle }}
+                <input type="{{ champ == 'email' ? 'email' : 'text' }}" name="compte[{{ champ }}]" value="{{ donnees[champ] ?? '' }}" required autocomplete="{{ champ == 'email' ? 'email' : (champ == 'prenom' ? 'given-name' : 'family-name') }}">
+                {% if erreurs[champ] is defined %}<span class="erreur-champ">{{ erreurs[champ] }}</span>{% endif %}
+            </label>
+        {% endfor %}
+        <label>Mot de passe (8 caractères minimum)
+            <input type="password" name="compte[motDePasse]" required minlength="8" autocomplete="new-password">
+            {% if erreurs.motDePasse is defined %}<span class="erreur-champ">{{ erreurs.motDePasse }}</span>{% endif %}
+        </label>
+        <label>Confirmer le mot de passe
+            <input type="password" name="compte[confirmation]" required autocomplete="new-password">
+            {% if erreurs.confirmation is defined %}<span class="erreur-champ">{{ erreurs.confirmation }}</span>{% endif %}
+        </label>
+        <div class="actions"><button class="bouton" type="submit">Créer mon compte</button> <a href="{{ path('app_login') }}">J'ai déjà un compte</a></div>
+    </form>
+{% endblock %}

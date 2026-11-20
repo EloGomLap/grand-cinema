@@ -9,3 +9,9 @@ services:
             - '../src/Kernel.php'
             - '../src/Entity/'
             - '../src/Exception/'
+
+    # Prestataire de paiement : passerelle simulée (cartes de test Stripe) en attendant le compte Stripe
+    App\Paiement\PasserellePaiementInterface: '@App\Paiement\PasserellePaiementSimulee'
+
+    # Envoi des emails : journal (var/log/emails.log) en attendant le compte Brevo
+    App\Notification\EnvoiEmailInterface: '@App\Notification\EnvoiEmailJournal'

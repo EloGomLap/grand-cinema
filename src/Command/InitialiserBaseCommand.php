@@ -3,6 +3,8 @@
 namespace App\Command;
 
 use App\Entity\Film;
+use App\Entity\Salle;
+use App\Entity\Seance;
 use App\Entity\Utilisateur;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -34,7 +36,9 @@ class InitialiserBaseCommand extends Command
             ->addOption('mdp-admin', null, InputOption::VALUE_REQUIRED, 'Mot de passe du compte administrateur', 'Admin-Cinema-2026')
             ->addOption('mdp-programmateur', null, InputOption::VALUE_REQUIRED, 'Mot de passe du compte programmateur', 'Prog-Cinema-2026')
             ->addOption('mdp-client', null, InputOption::VALUE_REQUIRED, 'Mot de passe du compte client', 'Client-Cinema-2026')
-            ->addOption('sans-films', null, InputOption::VALUE_NONE, 'Ne pas créer les films de démonstration');
+            ->addOption('mdp-guichetier', null, InputOption::VALUE_REQUIRED, 'Mot de passe du compte guichetier', 'Guichet-Cinema-2026')
+            ->addOption('mdp-controleur', null, InputOption::VALUE_REQUIRED, 'Mot de passe du compte contrôleur', 'Controle-Cinema-2026')
+            ->addOption('sans-films', null, InputOption::VALUE_NONE, 'Ne pas créer les films et les séances de démonstration');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -51,6 +55,8 @@ class InitialiserBaseCommand extends Command
             ['Admin', 'Cinema', 'admin@grandcinema.fr', 'ADMIN', $input->getOption('mdp-admin')],
             ['Martin', 'Paul', 'programmateur@grandcinema.fr', 'PROGRAMMATEUR', $input->getOption('mdp-programmateur')],
             ['Durand', 'Lea', 'client@grandcinema.fr', 'CLIENT', $input->getOption('mdp-client')],
+            ['Bernard', 'Sophie', 'guichetier@grandcinema.fr', 'GUICHETIER', $input->getOption('mdp-guichetier')],
+            ['Petit', 'Hugo', 'controleur@grandcinema.fr', 'CONTROLEUR', $input->getOption('mdp-controleur')],
         ];
 
         foreach ($comptes as [$nom, $prenom, $email, $role, $motDePasse]) {
@@ -66,20 +72,58 @@ class InitialiserBaseCommand extends Command
                 ['Whiplash', 107, 'Damien Chazelle', 'Drame musical', 'Tous publics', '2014-12-24'],
                 ['La La Land', 128, 'Damien Chazelle', 'Comédie musicale', 'Tous publics', '2017-01-25'],
             ];
+            $objetsFilms = [];
             foreach ($films as [$titre, $duree, $realisateur, $genre, $classification, $sortie]) {
-                $this->entityManager->persist((new Film())
+                $film = (new Film())
                     ->setTitre($titre)
                     ->setDureeMinutes($duree)
                     ->setRealisateur($realisateur)
                     ->setGenre($genre)
                     ->setClassification($classification)
-                    ->setDateSortie(new \DateTimeImmutable($sortie)));
+                    ->setDateSortie(new \DateTimeImmutable($sortie));
+                $this->entityManager->persist($film);
+                $objetsFilms[] = $film;
             }
+
+            $this->creerSallesEtSeances($objetsFilms);
         }
 
         $this->entityManager->flush();
-        $io->success('Base initialisée avec les comptes admin, programmateur et client.');
+        $io->success('Base initialisée avec les comptes de démonstration (admin, programmateur, guichetier, contrôleur, client).');
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Trois salles et deux semaines de séances, à partir d'aujourd'hui.
+     *
+     * @param Film[] $films
+     */
+    private function creerSallesEtSeances(array $films): void
+    {
+        $salles = [
+            (new Salle('Salle 1'))->genererPlan(6, 10),
+            (new Salle('Salle 2'))->genererPlan(5, 8),
+            (new Salle('Salle Jazz'))->genererPlan(4, 6),
+        ];
+        foreach ($salles as $salle) {
+            $this->entityManager->persist($salle);
+        }
+
+        // [salle, heure, film, langue, prix] : horaires choisis pour ne jamais se chevaucher
+        $grille = [
+            [0, '14:00', 1, 'VF', '8.50'],
+            [0, '20:30', 2, 'VF', '9.50'],
+            [1, '16:00', 3, 'VF', '8.50'],
+            [1, '21:00', 0, 'VOSTFR', '9.50'],
+            [2, '18:00', 0, 'VOSTFR', '10.00'],
+        ];
+        $aujourdhui = new \DateTimeImmutable('today');
+        for ($jour = 0; $jour < 14; ++$jour) {
+            foreach ($grille as [$salle, $heure, $film, $langue, $prix]) {
+                $debut = new \DateTimeImmutable($aujourdhui->modify("+$jour days")->format('Y-m-d').' '.$heure);
+                $this->entityManager->persist(new Seance($films[$film], $salles[$salle], $debut, $prix, $langue));
+            }
+        }
     }
 }

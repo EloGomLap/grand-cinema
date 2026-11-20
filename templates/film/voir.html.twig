@@ -14,7 +14,18 @@
         </p>
         {% if film.realisateur %}<p>Réalisé par {{ film.realisateur }}</p>{% endif %}
         {% if film.synopsis %}<p>{{ film.synopsis }}</p>{% endif %}
-        {% if film.afficheUrl %}<p><a href="{{ film.afficheUrl }}" rel="noopener" target="_blank">Voir l'affiche</a></p>{% endif %}
+        {% if film.afficheUrl %}<p><img class="affiche" src="{{ film.afficheUrl }}" alt="Affiche du film {{ film.titre }}" loading="lazy"></p>{% endif %}
+
+        <h2>Prochaines séances</h2>
+        {% if seances is empty %}
+            <p class="meta">Ce film n'est pas encore programmé.</p>
+        {% else %}
+            <ul class="seances">
+                {% for s in seances|slice(0, 10) %}
+                    <li><a class="badge" href="{{ path('seance_voir', {id: s.id}) }}">{{ s.dateHeureDebut|date('d/m H:i') }}</a> {{ s.salle.nom }} - {{ s.langue }} - {{ s.prix|number_format(2, ',', ' ') }} €</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
 
         {% if is_granted('ROLE_PROGRAMMATEUR') %}
             <div class="actions">

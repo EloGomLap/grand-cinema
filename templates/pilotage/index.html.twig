@@ -1,0 +1,73 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Pilotage - Le Grand Cinéma{% endblock %}
+
+{% macro jauge(taux) %}<span class="jauge" title="{{ taux }} %"><span style="width: {{ min(taux, 100) }}%"></span></span> {{ taux|number_format(1, ',', ' ') }} %{% endmacro %}
+
+{% block body %}
+    <h1>Pilotage de l'activité</h1>
+    <form method="get" class="filtres">
+        <label>Du <input type="date" name="du" value="{{ du|date('Y-m-d') }}"></label>
+        <label>Au <input type="date" name="au" value="{{ au|date('Y-m-d') }}"></label>
+        <button class="bouton secondaire" type="submit">Afficher</button>
+    </form>
+
+    <section id="frequentation">
+        <h2>Fréquentation</h2>
+        <div class="grille" style="margin-bottom: 1rem;">
+            <div class="carte indicateur"><div class="meta">Entrées vendues</div><strong>{{ frequentation.entrees }}</strong></div>
+            <div class="carte indicateur"><div class="meta">Recettes</div><strong>{{ frequentation.recettes|number_format(2, ',', ' ') }} €</strong></div>
+            <div class="carte indicateur"><div class="meta">Vendues en ligne</div><strong>{{ frequentation.partEnLigne|number_format(1, ',', ' ') }} %</strong> <span class="meta">{{ frequentation.parCanal.EN_LIGNE }} en ligne / {{ frequentation.parCanal.GUICHET }} au guichet</span></div>
+            <div class="carte indicateur"><div class="meta">Entrées contrôlées</div><strong>{{ frequentation.controlees }}</strong></div>
+        </div>
+        {% set maxJour = max(frequentation.parJour|map(j => j.entrees)|merge([1])) %}
+        <h3>Entrées par jour</h3>
+        <div class="histogramme" role="img" aria-label="Entrées par jour">
+            {% for j in frequentation.parJour %}
+                <div class="barre" title="{{ j.jour|date('d/m') }} : {{ j.entrees }} entrées">
+                    <span class="valeur">{{ j.entrees }}</span>
+                    <span class="baton" style="height: {{ (100 * j.entrees / maxJour)|round }}%"></span>
+                    <span class="jour">{{ j.jour|date('d/m') }}</span>
+                </div>
+            {% endfor %}
+        </div>
+        <h3>Par film</h3>
+        <table class="tableau" id="frequentation-films">
+            <thead><tr><th>Film</th><th>Entrées</th></tr></thead>
+            <tbody>
+            {% for f in frequentation.parFilm %}<tr><td>{{ f.film }}</td><td>{{ f.entrees }}</td></tr>{% else %}<tr><td colspan="2" class="meta">Aucune entrée sur la période.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </section>
+
+    <section id="remplissage">
+        <h2>Taux de remplissage</h2>
+        <div class="grille" style="margin-bottom: 1rem;">
+            <div class="carte indicateur"><div class="meta">Taux moyen</div><strong>{{ remplissage.moyenne|number_format(1, ',', ' ') }} %</strong></div>
+            <div class="carte indicateur"><div class="meta">Places vendues</div><strong>{{ remplissage.placesVendues }}</strong> <span class="meta">sur {{ remplissage.placesOffertes }}</span></div>
+            <div class="carte indicateur"><div class="meta">Séances</div><strong>{{ remplissage.seances|length }}</strong></div>
+        </div>
+
+        <h3>Par film</h3>
+        <table class="tableau" id="remplissage-films">
+            <thead><tr><th>Film</th><th>Séances</th><th>Places vendues</th><th>Remplissage</th></tr></thead>
+            <tbody>
+            {% for f in remplissage.films %}
+                <tr><td>{{ f.film }}</td><td>{{ f.seances }}</td><td>{{ f.vendues }} / {{ f.capacite }}</td><td>{{ _self.jauge(f.taux) }}</td></tr>
+            {% else %}
+                <tr><td colspan="4" class="meta">Aucune séance sur la période.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <h3>Par séance</h3>
+        <table class="tableau" id="remplissage-seances">
+            <thead><tr><th>Date</th><th>Film</th><th>Salle</th><th>Places vendues</th><th>Remplissage</th></tr></thead>
+            <tbody>
+            {% for l in remplissage.seances %}
+                <tr><td>{{ l.seance.dateHeureDebut|date('d/m H:i') }}</td><td>{{ l.seance.film.titre }}</td><td>{{ l.seance.salle.nom }}</td><td>{{ l.vendues }} / {{ l.capacite }}</td><td>{{ _self.jauge(l.taux) }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </section>
+{% endblock %}
