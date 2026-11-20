@@ -9,12 +9,18 @@
 
     <form method="post" class="formulaire" novalidate>
         <input type="hidden" name="_token" value="{{ csrf_token('inscription') }}">
-        {% for champ, libelle in {prenom: 'Prénom', nom: 'Nom', email: 'Email'} %}
-            <label>{{ libelle }}
-                <input type="{{ champ == 'email' ? 'email' : 'text' }}" name="compte[{{ champ }}]" value="{{ donnees[champ] ?? '' }}" required autocomplete="{{ champ == 'email' ? 'email' : (champ == 'prenom' ? 'given-name' : 'family-name') }}">
-                {% if erreurs[champ] is defined %}<span class="erreur-champ">{{ erreurs[champ] }}</span>{% endif %}
-            </label>
-        {% endfor %}
+        <label>Prénom
+            <input type="text" name="compte[prenom]" value="{{ donnees.prenom ?? '' }}" required autocomplete="given-name">
+            {% if erreurs.prenom is defined %}<span class="erreur-champ">{{ erreurs.prenom }}</span>{% endif %}
+        </label>
+        <label>Nom
+            <input type="text" name="compte[nom]" value="{{ donnees.nom ?? '' }}" required autocomplete="family-name">
+            {% if erreurs.nom is defined %}<span class="erreur-champ">{{ erreurs.nom }}</span>{% endif %}
+        </label>
+        <label>Email
+            <input type="email" name="compte[email]" value="{{ donnees.email ?? '' }}" required autocomplete="email">
+            {% if erreurs.email is defined %}<span class="erreur-champ">{{ erreurs.email }}</span>{% endif %}
+        </label>
         <label>Mot de passe (8 caractères minimum)
             <input type="password" name="compte[motDePasse]" required minlength="8" autocomplete="new-password">
             {% if erreurs.motDePasse is defined %}<span class="erreur-champ">{{ erreurs.motDePasse }}</span>{% endif %}
