@@ -15,5 +15,8 @@
             {% elseif reservation.statut == 'ANNULEE' or expiree %}<span class="badge ko">Expirée : les places ont été libérées</span>
             {% else %}<span class="badge">En attente de paiement</span> <span class="meta">vos places sont bloquées {{ minutesBlocage }} minutes</span>{% endif %}
         </p>
+        {% if reservation.estEnAttente and not expiree and reservation.canal == 'EN_LIGNE' %}
+            <p><a class="bouton" href="{{ path('reservation_paiement', {id: reservation.id}) }}">Payer {{ reservation.montantTotal|number_format(2, ',', ' ') }} €</a></p>
+        {% endif %}
     </article>
 {% endblock %}
