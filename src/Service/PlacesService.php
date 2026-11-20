@@ -86,4 +86,39 @@ class PlacesService
             'places' => $places,
         ];
     }
+
+    /**
+     * Attribution automatique au guichet : N places côte à côte, en commençant par les rangs du milieu
+     * (les meilleures places). À défaut, les premières places libres.
+     *
+     * @return int[] identifiants des places
+     */
+    public function meilleuresPlacesLibres(Seance $seance, int $nombre): array
+    {
+        $plan = $this->plan($seance);
+        $rangs = array_keys($plan);
+        $milieu = (count($rangs) - 1) / 2;
+        usort($rangs, static fn ($a, $b) => abs(array_search($a, array_keys($plan), true) - $milieu) <=> abs(array_search($b, array_keys($plan), true) - $milieu));
+
+        foreach ($rangs as $rang) {
+            $suite = [];
+            foreach ($plan[$rang] as $case) {
+                $suite = $case['libre'] ? [...$suite, $case['place']->getId()] : [];
+                if (count($suite) === $nombre) {
+                    return $suite;
+                }
+            }
+        }
+
+        $libres = [];
+        foreach ($plan as $ligne) {
+            foreach ($ligne as $case) {
+                if ($case['libre']) {
+                    $libres[] = $case['place']->getId();
+                }
+            }
+        }
+
+        return array_slice($libres, 0, $nombre);
+    }
 }

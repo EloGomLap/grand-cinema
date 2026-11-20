@@ -10,7 +10,38 @@
         {% if restantes == 0 %}<span class="badge ko">Complet</span>
         {% else %}<span class="badge {{ restantes <= 10 ? 'ko' : 'ok' }}">{{ restantes }} place{{ restantes > 1 ? 's' }} restante{{ restantes > 1 ? 's' }} sur {{ seance.salle.capacite }}</span>{% endif %}
     </p>
-    <section class="carte">
-        {% include 'seance/_plan.html.twig' with {plan: plan, selection: false} %}
-    </section>
+    {% if erreur ?? false %}<div class="flash erreur">{{ erreur }}</div>{% endif %}
+
+    {% if restantes > 0 and seance.dateHeureFin > date() %}
+        <form method="post" action="{{ path('guichet_vente', {id: seance.id}) }}" class="carte" id="form-vente">
+            <input type="hidden" name="_token" value="{{ csrf_token('vente' ~ seance.id) }}">
+            <h2>Vendre des places</h2>
+            <p class="meta">Cochez les places sur le plan, ou indiquez un nombre de places pour une attribution automatique (meilleures places côte à côte).</p>
+            {% include 'seance/_plan.html.twig' with {plan: plan, selection: true} %}
+            <div class="actions">
+                <label>Nombre de places (si aucune cochée)
+                    <input type="number" name="nombre" min="1" max="{{ maxPlaces }}" value="">
+                </label>
+                <label>Paiement
+                    <select name="mode" id="mode">
+                        {% for code, libelle in modes %}<option value="{{ code }}">{{ libelle }}</option>{% endfor %}
+                    </select>
+                </label>
+                <label id="zone-recu">Montant reçu en espèces (€)
+                    <input type="text" name="montantRecu" inputmode="decimal">
+                </label>
+            </div>
+            <div class="actions" style="margin-top: 1rem;"><button class="bouton" type="submit">Encaisser et éditer les billets</button></div>
+        </form>
+        <script>
+            (function () {
+                const mode = document.getElementById('mode');
+                const zone = document.getElementById('zone-recu');
+                const maj = function () { zone.hidden = mode.value !== 'ESPECES'; };
+                mode.addEventListener('change', maj); maj();
+            })();
+        </script>
+    {% else %}
+        <section class="carte">{% include 'seance/_plan.html.twig' with {plan: plan, selection: false} %}</section>
+    {% endif %}
 {% endblock %}

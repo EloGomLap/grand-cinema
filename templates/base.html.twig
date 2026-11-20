@@ -55,6 +55,7 @@
         .resultat-controle.accepte { background: rgba(111, 208, 140, .2); border: 2px solid var(--ok); }
         .resultat-controle.refuse { background: rgba(255, 122, 107, .18); border: 2px solid var(--erreur); }
         tr.commencee { opacity: .55; }
+        @media print { header, .flash, button, .meta { display: none !important; } body { background: #fff; color: #000; } .carte { border: 1px solid #000; } }
         .tableau { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
         .tableau th, .tableau td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid #2e2a3a; vertical-align: middle; }
         .tableau th { color: var(--doux); font-weight: 600; font-size: .9rem; }
