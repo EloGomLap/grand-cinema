@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Billet {{ billet.place.libelle }} - {{ billet.seance.film.titre }}{% endblock %}
+
+{% block body %}
+    {% set s = billet.seance %}
+    <article class="carte billet">
+        <h1>{{ s.film.titre }}</h1>
+        <p><strong>{{ s.dateHeureDebut|date('d/m/Y à H:i') }}</strong> - {{ s.salle.nom }} - {{ s.langue }}</p>
+        <p class="place">Place <strong>{{ billet.place.libelle }}</strong></p>
+        {% include 'billet/_qr.html.twig' with {code: billet.code, taille: 220} %}
+        <p class="meta code">{{ billet.code }}</p>
+        {% if billet.dateValidation %}<p><span class="badge ko">Billet utilisé le {{ billet.dateValidation|date('d/m/Y à H:i') }}</span></p>{% endif %}
+    </article>
+{% endblock %}
