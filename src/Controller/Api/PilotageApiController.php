@@ -34,4 +34,12 @@ class PilotageApiController extends AbstractApiController
 
         return $this->reponse(['du' => $du->format('Y-m-d'), 'au' => $au->format('Y-m-d')] + $donnees);
     }
+
+    #[Route('/frequentation', name: 'api_pilotage_frequentation', methods: ['GET'])]
+    public function frequentation(Request $request): JsonResponse
+    {
+        [$du, $au] = PilotageController::lirePeriode($request);
+
+        return $this->reponse(['du' => $du->format('Y-m-d'), 'au' => $au->format('Y-m-d')] + $this->pilotageService->frequentation($du, $au));
+    }
 }

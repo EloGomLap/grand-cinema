@@ -370,6 +370,31 @@ paths:
                 seances: [{ seanceId: 1, film: Bird, salle: Salle 1, debut: '2026-11-21T14:00:00+01:00', vendues: 4, capacite: 10, taux: 40 }]
         '401': { $ref: '#/components/responses/NonAuthentifie' }
         '403': { $ref: '#/components/responses/AccesRefuse' }
+  /api/pilotage/frequentation:
+    get:
+      tags: [Pilotage]
+      summary: Fréquentation (entrées, recettes, part de la vente en ligne)
+      security: [{ basicAuth: [] }]
+      parameters:
+        - { name: du, in: query, required: false, schema: { type: string, format: date } }
+        - { name: au, in: query, required: false, schema: { type: string, format: date } }
+      responses:
+        '200':
+          description: Indicateurs de fréquentation
+          content:
+            application/json:
+              example:
+                du: '2026-11-13'
+                au: '2026-11-27'
+                entrees: 5
+                recettes: 48
+                partEnLigne: 80
+                controlees: 1
+                parCanal: { EN_LIGNE: 4, GUICHET: 1 }
+                parFilm: [{ film: Bird, entrees: 4 }, { film: Whiplash, entrees: 1 }]
+                parJour: [{ jour: '2026-11-21', entrees: 4, recettes: 40 }]
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '403': { $ref: '#/components/responses/AccesRefuse' }
 components:
   securitySchemes:
     basicAuth:

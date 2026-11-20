@@ -12,6 +12,34 @@
         <button class="bouton secondaire" type="submit">Afficher</button>
     </form>
 
+    <section id="frequentation">
+        <h2>Fréquentation</h2>
+        <div class="grille" style="margin-bottom: 1rem;">
+            <div class="carte indicateur"><div class="meta">Entrées vendues</div><strong>{{ frequentation.entrees }}</strong></div>
+            <div class="carte indicateur"><div class="meta">Recettes</div><strong>{{ frequentation.recettes|number_format(2, ',', ' ') }} €</strong></div>
+            <div class="carte indicateur"><div class="meta">Vendues en ligne</div><strong>{{ frequentation.partEnLigne|number_format(1, ',', ' ') }} %</strong> <span class="meta">{{ frequentation.parCanal.EN_LIGNE }} en ligne / {{ frequentation.parCanal.GUICHET }} au guichet</span></div>
+            <div class="carte indicateur"><div class="meta">Entrées contrôlées</div><strong>{{ frequentation.controlees }}</strong></div>
+        </div>
+        {% set maxJour = max(frequentation.parJour|map(j => j.entrees)|merge([1])) %}
+        <h3>Entrées par jour</h3>
+        <div class="histogramme" role="img" aria-label="Entrées par jour">
+            {% for j in frequentation.parJour %}
+                <div class="barre" title="{{ j.jour|date('d/m') }} : {{ j.entrees }} entrées">
+                    <span class="valeur">{{ j.entrees }}</span>
+                    <span class="baton" style="height: {{ (100 * j.entrees / maxJour)|round }}%"></span>
+                    <span class="jour">{{ j.jour|date('d/m') }}</span>
+                </div>
+            {% endfor %}
+        </div>
+        <h3>Par film</h3>
+        <table class="tableau" id="frequentation-films">
+            <thead><tr><th>Film</th><th>Entrées</th></tr></thead>
+            <tbody>
+            {% for f in frequentation.parFilm %}<tr><td>{{ f.film }}</td><td>{{ f.entrees }}</td></tr>{% else %}<tr><td colspan="2" class="meta">Aucune entrée sur la période.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </section>
+
     <section id="remplissage">
         <h2>Taux de remplissage</h2>
         <div class="grille" style="margin-bottom: 1rem;">
