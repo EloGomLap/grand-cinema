@@ -90,26 +90,40 @@ Exemple : `feat: ajout du choix de la place lors de la réservation`
 | Contrôle | Présenter son billet | `feature/controle-presenter-billet` |
 | Contrôle | Scanner les billets | `feature/controle-scanner-billets` |
 
-## Fonctionnalité livrée : la banque de films
+## Fonctionnalités livrées (MVP)
 
-User stories « Programmation - Ajouter un film » et « Programmation - Renseigner la fiche d'un film », développées sur la branche `feature/programmation-ajouter-film`.
+Les 19 user stories du backlog sont implémentées, chacune sur sa branche `feature/...` fusionnée dans `develop` par merge request (PR #2 et #4 à #21), puis livrées sur `main`.
 
-- Consultation du catalogue (tout le monde), avec filtre par genre.
-- Ajout, modification et suppression d'un film (programmateur et administrateur uniquement).
-- Mêmes règles métier pour le site et pour l'API, grâce au service `FilmService` : titre obligatoire, durée entre 1 et 600 minutes, classification parmi une liste, date au format AAAA-MM-JJ, URL d'affiche valide.
-- Sécurité : connexion par formulaire (site) ou HTTP Basic (API), mots de passe hachés, contrôle des rôles, jetons CSRF sur les formulaires.
+| EPIC | Ce que l'application permet | Où |
+|---|---|---|
+| Accès | L'administrateur crée les comptes du personnel et change leur rôle | `/admin/utilisateurs` |
+| Programmation | Banque de films (ajout, fiche, modification, suppression), programmation des séances sans chevauchement (durée du film + 20 min de ménage), disponibilité des salles sur une journée | `/films`, `/programmation/seances`, `/programmation/salles` |
+| Consultation | Séances à venir par jour et par film (en ligne), séances du jour (guichet) | `/seances`, `/guichet` |
+| Réservation | Places restantes en temps réel, plan de salle et choix des places (10 max.), place bloquée 15 minutes le temps du paiement, impossible de vendre deux fois la même place | `/seances/{id}`, `/guichet/seances/{id}` |
+| Paiement | Paiement en ligne par carte, au guichet en espèces (monnaie à rendre), carte ou chèque | `/reservations/{id}/paiement`, `/guichet/seances/{id}/vente` |
+| Billets et compte client | Création de compte, billets avec QR code envoyés par email, historique « Mes billets » | `/inscription`, `/mon-compte/billets`, `/billets/{code}` |
+| Contrôle | Présentation du billet (QR code) et scan à l'entrée : valide, inconnu, non payé, déjà utilisé, trop tôt, séance terminée | `/controle` |
+| Pilotage | Taux de remplissage (par séance, par film, moyen) et fréquentation (entrées par jour et par film, recettes, part de la vente en ligne) | `/pilotage` |
+
+Mêmes règles métier pour le site et pour l'API grâce aux services (`FilmService`, `SeanceService`, `ReservationService`, `PaiementService`, `ControleService`, `PilotageService`...).
+
+Sécurité : connexion par formulaire (site) ou HTTP Basic (API), mots de passe hachés, contrôle des rôles (hiérarchie : l'administrateur hérite des rôles programmateur, guichetier et contrôleur), un client ne voit que ses propres réservations (voter), jetons CSRF sur les formulaires.
+
+Prestataires simulés en attendant les comptes de production : le paiement passe par une passerelle simulée (cartes de test au format Stripe : `4242 4242 4242 4242` acceptée, `4000 0000 0000 0002` refusée) et les emails sont écrits dans `var/log/emails.log`. Les deux sont derrière une interface (`PasserellePaiementInterface`, `EnvoiEmailInterface`) : brancher Stripe ou Brevo ne touche qu'une ligne de `config/services.yaml`.
 
 ## Comptes de démonstration
 
-Créés par la commande `php bin/console app:initialiser-base` :
+Créés par la commande `php bin/console app:initialiser-base` (avec 3 salles, des films et 70 séances sur 14 jours) :
 
 | Rôle | Email | Mot de passe | Droits |
 |---|---|---|---|
-| Administrateur | admin@grandcinema.fr | Admin-Cinema-2026 | Tous les droits |
-| Programmateur | programmateur@grandcinema.fr | Prog-Cinema-2026 | Gestion de la banque de films |
-| Client | client@grandcinema.fr | Client-Cinema-2026 | Consultation |
+| Administrateur | admin@grandcinema.fr | Admin-Cinema-2026 | Tous les droits, gestion du personnel |
+| Programmateur | programmateur@grandcinema.fr | Prog-Cinema-2026 | Films, séances, salles, pilotage |
+| Guichetier | guichetier@grandcinema.fr | Guichet-Cinema-2026 | Vente au guichet |
+| Contrôleur | controleur@grandcinema.fr | Controle-Cinema-2026 | Contrôle des billets |
+| Client | client@grandcinema.fr | Client-Cinema-2026 | Réservation et paiement en ligne, mes billets |
 
-En production, les mots de passe se changent avec les options `--mdp-admin`, `--mdp-programmateur` et `--mdp-client`.
+En production, les mots de passe se changent avec les options `--mdp-admin`, `--mdp-programmateur`, `--mdp-guichetier`, `--mdp-controleur` et `--mdp-client`.
 
 ## API REST
 
@@ -121,9 +135,23 @@ Documentation interactive : `/api/doc` (Swagger UI). Bouton **Authorize** pour s
 | GET | /api/films/{id} | Public | Détail d'un film |
 | POST | /api/films | Programmateur | Ajout (201) |
 | PUT | /api/films/{id} | Programmateur | Modification |
-| DELETE | /api/films/{id} | Programmateur | Suppression (204) |
+| DELETE | /api/films/{id} | Programmateur | Suppression (204, 409 si le film a des séances) |
+| GET | /api/seances?date=...&film=... | Public | Séances à venir |
+| GET | /api/seances/{id} | Public | Détail d'une séance |
+| GET | /api/seances/{id}/places | Public | Plan de salle et places restantes |
+| POST | /api/seances | Programmateur | Programmer une séance (201, 400 si la salle est déjà occupée) |
+| GET | /api/salles | Public | Liste des salles |
+| GET | /api/salles/disponibilite?date=... | Programmateur | Disponibilité des salles |
+| POST | /api/comptes | Public | Créer un compte client (201) |
+| POST | /api/reservations | Connecté | Réserver des places (201, 409 si une place est déjà prise) |
+| GET | /api/reservations/{id} | Propriétaire | Détail d'une réservation |
+| POST | /api/reservations/{id}/paiement | Propriétaire | Payer par carte (402 si refusé) |
+| GET | /api/reservations/mes-billets | Connecté | Mes billets |
+| POST | /api/billets/{code}/validation | Contrôleur | Scanner un billet (404 inconnu, 409 refusé) |
+| GET | /api/pilotage/remplissage | Programmateur | Taux de remplissage |
+| GET | /api/pilotage/frequentation | Programmateur | Fréquentation et recettes |
 
-Codes d'erreur : 400 (données invalides, avec le détail par champ), 401 (non authentifié), 403 (rôle insuffisant), 404 (film introuvable).
+Codes d'erreur : 400 (données invalides, avec le détail par champ), 401 (non authentifié), 403 (rôle insuffisant), 404 (ressource introuvable), 409 (conflit).
 
 ## Installation (développement)
 
@@ -140,7 +168,7 @@ php -S localhost:8000 -t public          # puis ouvrir http://localhost:8000
 ## Tests
 
 ```bash
-vendor/bin/phpunit                                   # 37 tests unitaires et fonctionnels
+vendor/bin/phpunit                                   # 114 tests unitaires et fonctionnels
 vendor/bin/phpunit --coverage-html coverage          # rapport de couverture (extension pcov ou xdebug)
 ```
 
