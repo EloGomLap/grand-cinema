@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Film;
 use App\Exception\FilmInvalideException;
 use App\Repository\FilmRepository;
+use App\Repository\SeanceRepository;
 use App\Service\FilmService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,6 +23,7 @@ class FilmController extends AbstractController
     public function __construct(
         private readonly FilmRepository $filmRepository,
         private readonly FilmService $filmService,
+        private readonly SeanceRepository $seanceRepository,
     ) {
     }
 
@@ -67,7 +69,12 @@ class FilmController extends AbstractController
     #[Route('/{id}', name: 'film_voir', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function voir(int $id): Response
     {
-        return $this->render('film/voir.html.twig', ['film' => $this->trouverFilm($id)]);
+        $film = $this->trouverFilm($id);
+
+        return $this->render('film/voir.html.twig', [
+            'film' => $film,
+            'seances' => $this->seanceRepository->aVenir(film: $film),
+        ]);
     }
 
     #[Route('/{id}/modifier', name: 'film_modifier', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
