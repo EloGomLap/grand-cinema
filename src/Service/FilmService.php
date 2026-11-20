@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Film;
+use App\Entity\Seance;
 use App\Exception\FilmInvalideException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -54,8 +55,17 @@ class FilmService
         return $film;
     }
 
+    /**
+     * Un film déjà programmé ne peut pas être supprimé : ses séances (et billets) en dépendent.
+     *
+     * @throws FilmInvalideException
+     */
     public function supprimer(Film $film): void
     {
+        if ($this->entityManager->getRepository(Seance::class)->count(['film' => $film]) > 0) {
+            throw new FilmInvalideException(['film' => 'Ce film a des séances programmées : il ne peut pas être supprimé.']);
+        }
+
         $this->entityManager->remove($film);
         $this->entityManager->flush();
     }

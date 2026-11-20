@@ -75,7 +75,11 @@ class FilmApiController extends AbstractController
     #[IsGranted('ROLE_PROGRAMMATEUR', message: 'Action réservée aux programmateurs et administrateurs.')]
     public function supprimer(int $id): Response
     {
-        $this->filmService->supprimer($this->trouverFilm($id));
+        try {
+            $this->filmService->supprimer($this->trouverFilm($id));
+        } catch (FilmInvalideException $e) {
+            return $this->reponse(['erreur' => implode(' ', $e->getErreurs())], Response::HTTP_CONFLICT);
+        }
 
         return new Response(null, Response::HTTP_NO_CONTENT);
     }

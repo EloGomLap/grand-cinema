@@ -1,19 +1,21 @@
 openapi: 3.0.3
 info:
-  title: API Grand Cinéma - Banque de films
-  version: 1.0.0
+  title: API Grand Cinéma
+  version: 1.1.0
   description: |
-    API REST de gestion du catalogue de films du Grand Cinéma.
+    API REST de l'application de réservation du Grand Cinéma.
 
-    - La consultation (GET) est publique.
-    - La création, la modification et la suppression sont réservées aux rôles
-      PROGRAMMATEUR et ADMIN. Cliquez sur **Authorize** et saisissez l'email et
-      le mot de passe d'un compte programmateur ou administrateur (HTTP Basic).
+    - La consultation (GET des films, salles et séances) est publique.
+    - Les autres opérations demandent un compte : cliquez sur **Authorize** et saisissez
+      l'email et le mot de passe du compte (HTTP Basic). Le rôle requis est indiqué
+      sur chaque route (PROGRAMMATEUR, GUICHETIER, CONTROLEUR, CLIENT ou ADMIN).
 servers:
   - url: /
 tags:
   - name: Films
     description: Banque de films du cinéma
+  - name: Séances
+    description: Salles et programmation des séances
 paths:
   /api/films:
     get:
@@ -101,6 +103,53 @@ paths:
         '401': { $ref: '#/components/responses/NonAuthentifie' }
         '403': { $ref: '#/components/responses/AccesRefuse' }
         '404': { $ref: '#/components/responses/Introuvable' }
+  /api/salles:
+    get:
+      tags: [Séances]
+      summary: Lister les salles
+      responses:
+        '200':
+          description: Salles du cinéma avec leur capacité
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Salle' }
+  /api/seances:
+    post:
+      tags: [Séances]
+      summary: Programmer une séance (PROGRAMMATEUR)
+      description: |
+        Refusée si la salle est déjà occupée sur ce créneau : un film occupe la salle
+        pendant sa durée plus 20 minutes (bandes-annonces et nettoyage).
+      security: [{ basicAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SeanceSaisie' }
+      responses:
+        '201':
+          description: Séance programmée
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Seance' }
+        '400': { $ref: '#/components/responses/DonneesInvalides' }
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '403': { $ref: '#/components/responses/AccesRefuse' }
+  /api/seances/{id}:
+    get:
+      tags: [Séances]
+      summary: Consulter une séance
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: La séance
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Seance' }
+        '404': { $ref: '#/components/responses/Introuvable' }
 components:
   securitySchemes:
     basicAuth:
@@ -131,6 +180,36 @@ components:
         classification: { type: string, enum: ['Tous publics', '-12', '-16', '-18'] }
         afficheUrl: { type: string, format: uri }
         dateSortie: { type: string, format: date, example: '2014-12-24' }
+    Salle:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        nom: { type: string, example: Salle Jazz }
+        capacite: { type: integer, example: 24 }
+    Seance:
+      type: object
+      properties:
+        id: { type: integer, example: 12 }
+        film:
+          type: object
+          properties:
+            id: { type: integer }
+            titre: { type: string, example: Whiplash }
+            dureeMinutes: { type: integer, example: 107 }
+        salle: { $ref: '#/components/schemas/Salle' }
+        debut: { type: string, format: date-time, example: '2026-11-21T20:30:00+01:00' }
+        fin: { type: string, format: date-time, description: Fin du film + 20 minutes }
+        langue: { type: string, enum: [VF, VOSTFR] }
+        prix: { type: number, example: 9.5 }
+    SeanceSaisie:
+      type: object
+      required: [filmId, salleId, debut, prix]
+      properties:
+        filmId: { type: integer, example: 3 }
+        salleId: { type: integer, example: 1 }
+        debut: { type: string, example: '2026-12-01T20:30', description: AAAA-MM-JJTHH:MM, heure de Paris }
+        langue: { type: string, enum: [VF, VOSTFR], default: VF }
+        prix: { type: number, example: 9.5 }
     Erreur:
       type: object
       properties:
@@ -148,12 +227,12 @@ components:
     NonAuthentifie:
       description: Authentification requise
     AccesRefuse:
-      description: Rôle insuffisant (programmateur ou administrateur requis)
+      description: Rôle insuffisant pour cette action
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Erreur' }
     Introuvable:
-      description: Film introuvable
+      description: Ressource introuvable
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Erreur' }

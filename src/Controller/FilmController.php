@@ -106,7 +106,13 @@ class FilmController extends AbstractController
         $film = $this->trouverFilm($id);
         $this->verifierJetonCsrf($request, 'supprimer'.$film->getId());
 
-        $this->filmService->supprimer($film);
+        try {
+            $this->filmService->supprimer($film);
+        } catch (FilmInvalideException $e) {
+            $this->addFlash('erreur', implode(' ', $e->getErreurs()));
+
+            return $this->redirectToRoute('film_voir', ['id' => $film->getId()]);
+        }
         $this->addFlash('succes', 'Le film a été supprimé.');
 
         return $this->redirectToRoute('film_index');

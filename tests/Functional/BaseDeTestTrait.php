@@ -3,6 +3,8 @@
 namespace App\Tests\Functional;
 
 use App\Entity\Film;
+use App\Entity\Salle;
+use App\Entity\Seance;
 use App\Entity\Utilisateur;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -54,5 +56,23 @@ trait BaseDeTestTrait
     protected function film(string $titre): ?Film
     {
         return $this->em->getRepository(Film::class)->findOneBy(['titre' => $titre]);
+    }
+
+    protected function creerSalle(string $nom, int $rangs, int $placesParRang): Salle
+    {
+        $salle = (new Salle($nom))->genererPlan($rangs, $placesParRang);
+        $this->em->persist($salle);
+        $this->em->flush();
+
+        return $salle;
+    }
+
+    protected function creerSeance(string $titreFilm, Salle $salle, string $debut, string $prix = '8.50'): Seance
+    {
+        $seance = new Seance($this->film($titreFilm), $salle, new \DateTimeImmutable($debut), $prix);
+        $this->em->persist($seance);
+        $this->em->flush();
+
+        return $seance;
     }
 }
