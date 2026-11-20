@@ -9,6 +9,8 @@ use App\Exception\PlaceDejaPriseException;
 use App\Repository\ReservationRepository;
 use App\Repository\SeanceRepository;
 use App\Security\ReservationVoter;
+use App\Paiement\PaiementRefuseException;
+use App\Service\PaiementService;
 use App\Service\ReservationService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -28,7 +30,29 @@ class ReservationApiController extends AbstractApiController
         protected readonly ReservationRepository $reservationRepository,
         private readonly SeanceRepository $seanceRepository,
         protected readonly ReservationService $reservationService,
+        private readonly PaiementService $paiementService,
     ) {
+    }
+
+    #[Route('/{id}/paiement', name: 'api_reservation_payer', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function payer(Request $request, int $id): JsonResponse
+    {
+        $reservation = $this->trouverReservation($id);
+        try {
+            $this->paiementService->verifierPayable($reservation, new \DateTimeImmutable());
+        } catch (DonneesInvalidesException $e) {
+            return $this->erreurValidation($e, Response::HTTP_CONFLICT);
+        }
+
+        try {
+            $this->paiementService->payerEnLigne($reservation, $this->lireJson($request));
+        } catch (DonneesInvalidesException $e) {
+            return $this->erreurValidation($e);
+        } catch (PaiementRefuseException $e) {
+            return $this->reponse(['erreur' => $e->getMessage()], Response::HTTP_PAYMENT_REQUIRED);
+        }
+
+        return $this->reponse($reservation->toArray());
     }
 
     #[Route('', name: 'api_reservation_creer', methods: ['POST'])]

@@ -250,6 +250,38 @@ paths:
         '401': { $ref: '#/components/responses/NonAuthentifie' }
         '403': { $ref: '#/components/responses/AccesRefuse' }
         '404': { $ref: '#/components/responses/Introuvable' }
+  /api/reservations/{id}/paiement:
+    post:
+      tags: [Réservations]
+      summary: Payer une réservation par carte
+      description: |
+        Paiement via le prestataire (passerelle simulée reprenant les cartes de test Stripe :
+        4242 4242 4242 4242 acceptée, 4000 0000 0000 0002 refusée). Le numéro de carte n'est jamais stocké.
+      security: [{ basicAuth: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [numeroCarte, expiration, cvc]
+              properties:
+                numeroCarte: { type: string, example: '4242 4242 4242 4242' }
+                expiration: { type: string, example: '12/30', description: MM/AA }
+                cvc: { type: string, example: '123' }
+      responses:
+        '200':
+          description: Paiement accepté, la réservation est payée et contient les billets
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Reservation' }
+        '400': { $ref: '#/components/responses/DonneesInvalides' }
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '402': { description: Paiement refusé par la banque }
+        '403': { $ref: '#/components/responses/AccesRefuse' }
+        '409': { description: Réservation déjà payée ou délai de paiement (15 min) dépassé }
 components:
   securitySchemes:
     basicAuth:
