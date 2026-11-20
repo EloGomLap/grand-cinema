@@ -3,7 +3,10 @@
 {% block title %}Programmation des séances{% endblock %}
 
 {% block body %}
-    <h1>Programmation des séances</h1>
+    <div class="actions" style="justify-content: space-between; margin-bottom: 1rem;">
+        <h1 style="margin: 0;">Programmation des séances</h1>
+        <a class="bouton secondaire" href="{{ path('programmation_salles') }}">Disponibilité des salles</a>
+    </div>
 
     <section class="carte" style="margin-bottom: 1.5rem;">
         <h2>Programmer une séance</h2>

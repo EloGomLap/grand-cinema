@@ -7,6 +7,8 @@ use App\Entity\Seance;
 use App\Exception\DonneesInvalidesException;
 use App\Repository\SalleRepository;
 use App\Repository\SeanceRepository;
+use App\Controller\ProgrammationController;
+use App\Service\DisponibiliteService;
 use App\Service\SeanceService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,7 +27,17 @@ class SeanceApiController extends AbstractApiController
         private readonly SeanceRepository $seanceRepository,
         private readonly SalleRepository $salleRepository,
         private readonly SeanceService $seanceService,
+        private readonly DisponibiliteService $disponibiliteService,
     ) {
+    }
+
+    #[Route('/salles/disponibilite', name: 'api_salle_disponibilite', methods: ['GET'])]
+    #[IsGranted('ROLE_PROGRAMMATEUR', message: 'Action réservée aux programmateurs et administrateurs.')]
+    public function disponibilite(Request $request): JsonResponse
+    {
+        $jour = ProgrammationController::lireJour($request->query->getString('date'));
+
+        return $this->reponse(['date' => $jour->format('Y-m-d'), 'salles' => $this->disponibiliteService->enTableau($jour)]);
     }
 
     #[Route('/salles', name: 'api_salle_liste', methods: ['GET'])]

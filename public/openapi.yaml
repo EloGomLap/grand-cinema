@@ -150,6 +150,26 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Seance' }
         '404': { $ref: '#/components/responses/Introuvable' }
+  /api/salles/disponibilite:
+    get:
+      tags: [Séances]
+      summary: Disponibilité des salles sur une journée (PROGRAMMATEUR)
+      security: [{ basicAuth: [] }]
+      parameters:
+        - { name: date, in: query, required: false, schema: { type: string, format: date }, description: "Jour (AAAA-MM-JJ), aujourd'hui par défaut" }
+      responses:
+        '200':
+          description: Pour chaque salle, les séances et les créneaux libres entre 10:00 et minuit
+          content:
+            application/json:
+              example:
+                date: '2026-11-21'
+                salles:
+                  - salle: { id: 1, nom: Salle 1, capacite: 60 }
+                    seances: [{ id: 4, film: Bird, debut: '14:00', fin: '17:01' }]
+                    creneauxLibres: [{ debut: '10:00', fin: '14:00', minutes: 240 }, { debut: '17:01', fin: '23:59', minutes: 418 }]
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '403': { $ref: '#/components/responses/AccesRefuse' }
 components:
   securitySchemes:
     basicAuth:
