@@ -79,6 +79,19 @@ class ReservationApiController extends AbstractApiController
         ]);
     }
 
+    /**
+     * User story « Compte client - Retrouver ses billets dans son compte ».
+     */
+    #[Route('/mes-billets', name: 'api_mes_billets', methods: ['GET'], priority: 10)]
+    public function mesBillets(): JsonResponse
+    {
+        /** @var Utilisateur $client */
+        $client = $this->getUser();
+        $payees = array_filter($this->reservationRepository->duClient($client), static fn (Reservation $r) => $r->estPayee());
+
+        return $this->reponse(array_values(array_map(static fn (Reservation $r) => $r->toArray(), $payees)));
+    }
+
     #[Route('/{id}', name: 'api_reservation_detail', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function detail(int $id): JsonResponse
     {

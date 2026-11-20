@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes billets - Le Grand Cinéma{% endblock %}
+
+{% macro ligne(r) %}
+    {% set s = r.seance %}
+    <article class="carte reservation">
+        <h3 style="margin: 0 0 .3rem;">{{ s.film.titre }}</h3>
+        <div><strong>{{ s.dateHeureDebut|date('d/m/Y à H:i') }}</strong> - {{ s.salle.nom }} - {{ s.langue }}</div>
+        <div class="meta">Places {% for b in r.billets %}{{ b.place.libelle }}{{ not loop.last ? ', ' }}{% endfor %} - {{ r.montantTotal|number_format(2, ',', ' ') }} €</div>
+        <div class="actions" style="margin-top: .5rem;">
+            {% if r.estPayee %}
+                {% for b in r.billets %}<a class="bouton secondaire" href="{{ path('billet_voir', {code: b.code}) }}">Billet {{ b.place.libelle }}</a>{% endfor %}
+            {% else %}
+                <a class="bouton" href="{{ path('reservation_paiement', {id: r.id}) }}">Finaliser le paiement</a>
+            {% endif %}
+        </div>
+    </article>
+{% endmacro %}
+
+{% block body %}
+    <h1>Mes billets</h1>
+
+    {% if enAttente is not empty %}
+        <h2>En attente de paiement</h2>
+        <div class="grille">{% for r in enAttente %}{{ _self.ligne(r) }}{% endfor %}</div>
+    {% endif %}
+
+    <h2>Séances à venir</h2>
+    {% if aVenir is empty %}
+        <p class="meta">Aucun billet pour le moment. <a href="{{ path('seance_index') }}">Voir les séances</a></p>
+    {% else %}
+        <div class="grille" id="a-venir">{% for r in aVenir %}{{ _self.ligne(r) }}{% endfor %}</div>
+    {% endif %}
+
+    {% if passees is not empty %}
+        <h2>Historique</h2>
+        <table class="tableau" id="historique">
+            <thead><tr><th>Date</th><th>Film</th><th>Places</th><th>Montant</th></tr></thead>
+            <tbody>
+            {% for r in passees %}
+                <tr><td>{{ r.seance.dateHeureDebut|date('d/m/Y H:i') }}</td><td>{{ r.seance.film.titre }}</td><td>{{ r.billets|length }}</td><td>{{ r.montantTotal|number_format(2, ',', ' ') }} €</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}

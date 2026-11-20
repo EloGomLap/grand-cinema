@@ -236,6 +236,20 @@ paths:
           content:
             application/json:
               example: { erreur: 'Place déjà réservée : C7. Merci d''en choisir d''autres.', placesDejaPrises: [C7] }
+  /api/reservations/mes-billets:
+    get:
+      tags: [Réservations]
+      summary: Mes billets (réservations payées du compte connecté)
+      security: [{ basicAuth: [] }]
+      responses:
+        '200':
+          description: Réservations payées avec leurs billets, de la séance la plus proche à la plus lointaine
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Reservation' }
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
   /api/reservations/{id}:
     get:
       tags: [Réservations]

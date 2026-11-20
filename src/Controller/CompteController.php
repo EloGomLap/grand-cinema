@@ -2,7 +2,11 @@
 
 namespace App\Controller;
 
+use App\Entity\Utilisateur;
 use App\Exception\DonneesInvalidesException;
+use App\Repository\ReservationRepository;
+use App\Service\ReservationService;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use App\Service\CompteService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -15,8 +19,41 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 class CompteController extends AbstractController
 {
-    public function __construct(private readonly CompteService $compteService)
+    public function __construct(
+        private readonly CompteService $compteService,
+        private readonly ReservationRepository $reservationRepository,
+        private readonly ReservationService $reservationService,
+    ) {
+    }
+
+    /**
+     * User story « Compte client - Retrouver ses billets dans son compte ».
+     */
+    #[Route('/mon-compte/billets', name: 'compte_billets', methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
+    public function mesBillets(): Response
     {
+        /** @var Utilisateur $client */
+        $client = $this->getUser();
+        $maintenant = new \DateTimeImmutable();
+        $aVenir = $enAttente = $passees = [];
+        foreach ($this->reservationRepository->duClient($client) as $reservation) {
+            if ($reservation->estEnAttente()) {
+                if (!$this->reservationService->estExpiree($reservation, $maintenant) && !$reservation->getSeance()->estPassee($maintenant)) {
+                    $enAttente[] = $reservation;
+                }
+            } elseif ($reservation->getSeance()->getDateHeureFin() < $maintenant) {
+                $passees[] = $reservation;
+            } else {
+                $aVenir[] = $reservation;
+            }
+        }
+
+        return $this->render('compte/billets.html.twig', [
+            'aVenir' => $aVenir,
+            'enAttente' => $enAttente,
+            'passees' => array_reverse($passees),
+        ]);
     }
 
     #[Route('/inscription', name: 'compte_inscription', methods: ['GET', 'POST'])]
