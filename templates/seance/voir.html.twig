@@ -21,7 +21,35 @@
     </article>
 
     <section class="carte" style="margin-top: 1rem;">
-        <h2>Plan de la salle</h2>
-        {% include 'seance/_plan.html.twig' with {plan: plan, selection: false} %}
+        <h2>{{ seance.estPassee ? 'Plan de la salle' : 'Choisissez vos places' }}</h2>
+        {% if erreur ?? false %}<div class="flash erreur">{{ erreur }}</div>{% endif %}
+        {% set reservable = not seance.estPassee and restantes > 0 and is_granted('ROLE_USER') %}
+        {% if reservable %}
+            <form method="post" action="{{ path('seance_reserver', {id: seance.id}) }}" id="form-reservation">
+                <input type="hidden" name="_token" value="{{ csrf_token('reserver' ~ seance.id) }}">
+                {% include 'seance/_plan.html.twig' with {plan: plan, selection: true} %}
+                <div class="actions" style="justify-content: center;">
+                    <span class="meta" id="recap-selection">Aucune place choisie ({{ maxPlaces }} au maximum)</span>
+                    <button class="bouton" type="submit">Réserver les places choisies</button>
+                </div>
+            </form>
+            <script>
+                // Récapitulatif en direct : nombre de places et montant
+                (function () {
+                    const form = document.getElementById('form-reservation');
+                    const recap = document.getElementById('recap-selection');
+                    const prix = {{ seance.prix }};
+                    form.addEventListener('change', function () {
+                        const n = form.querySelectorAll('input[name="places[]"]:checked').length;
+                        recap.textContent = n === 0 ? 'Aucune place choisie' : n + ' place' + (n > 1 ? 's' : '') + ' - ' + (n * prix).toFixed(2).replace('.', ',') + ' €';
+                    });
+                })();
+            </script>
+        {% else %}
+            {% include 'seance/_plan.html.twig' with {plan: plan, selection: false} %}
+            {% if not seance.estPassee and restantes > 0 %}
+                <p style="text-align: center;"><a class="bouton" href="{{ path('app_login') }}">Connectez-vous pour réserver</a></p>
+            {% endif %}
+        {% endif %}
     </section>
 {% endblock %}

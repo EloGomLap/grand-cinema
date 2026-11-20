@@ -202,6 +202,54 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/PlanSeance' }
         '404': { $ref: '#/components/responses/Introuvable' }
+  /api/reservations:
+    post:
+      tags: [Réservations]
+      summary: Réserver des places (compte connecté)
+      description: |
+        Bloque les places choisies pendant 15 minutes en attendant le paiement.
+        Protection contre la double réservation : vérification des places dans une transaction,
+        puis contrainte UNIQUE (seance, place) en base. Si une place vient d'être prise, réponse 409.
+      security: [{ basicAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [seanceId, places]
+              properties:
+                seanceId: { type: integer, example: 1 }
+                places: { type: array, items: { type: integer }, minItems: 1, maxItems: 10, example: [14, 15] }
+      responses:
+        '201':
+          description: Réservation créée, en attente de paiement
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Reservation' }
+        '400': { $ref: '#/components/responses/DonneesInvalides' }
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '409':
+          description: Une ou plusieurs places viennent d'être réservées
+          content:
+            application/json:
+              example: { erreur: 'Place déjà réservée : C7. Merci d''en choisir d''autres.', placesDejaPrises: [C7] }
+  /api/reservations/{id}:
+    get:
+      tags: [Réservations]
+      summary: Consulter une réservation (son propriétaire ou le guichet)
+      security: [{ basicAuth: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: La réservation (les codes des billets apparaissent une fois payée)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Reservation' }
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '403': { $ref: '#/components/responses/AccesRefuse' }
+        '404': { $ref: '#/components/responses/Introuvable' }
 components:
   securitySchemes:
     basicAuth:
@@ -280,6 +328,26 @@ components:
               numero: { type: integer, example: 7 }
               type: { type: string, enum: [STANDARD, PMR, PREMIUM] }
               libre: { type: boolean }
+    Reservation:
+      type: object
+      properties:
+        id: { type: integer }
+        seance: { $ref: '#/components/schemas/Seance' }
+        canal: { type: string, enum: [EN_LIGNE, GUICHET] }
+        statut: { type: string, enum: [EN_ATTENTE, PAYEE, ANNULEE] }
+        montantTotal: { type: number, example: 19 }
+        modePaiement: { type: string, nullable: true, enum: [CB_EN_LIGNE, ESPECES, CB, CHEQUE] }
+        dateReservation: { type: string, format: date-time }
+        places: { type: array, items: { type: string }, example: [C7, C8] }
+        billets:
+          type: array
+          items: { $ref: '#/components/schemas/Billet' }
+    Billet:
+      type: object
+      properties:
+        code: { type: string, example: 3f9a1c0d5e7b4a2f8c6d1e0b9a7f5c3d }
+        place: { type: string, example: C7 }
+        utilise: { type: boolean }
     Erreur:
       type: object
       properties:

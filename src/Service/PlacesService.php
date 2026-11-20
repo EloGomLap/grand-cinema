@@ -8,7 +8,8 @@ use App\Repository\BilletRepository;
 
 /**
  * User story « Réservation - Voir les places restantes ».
- * Une place est prise dès qu'elle figure dans une réservation payée ou en cours de paiement.
+ * Une place est prise dès qu'elle figure dans une réservation payée, ou en attente de paiement
+ * depuis moins de 15 minutes (au-delà, la réservation expire et la place est libérée).
  */
 class PlacesService
 {
