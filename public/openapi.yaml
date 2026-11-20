@@ -22,6 +22,8 @@ tags:
     description: Comptes clients
   - name: Contrôle
     description: Validation des billets à l'entrée des salles
+  - name: Pilotage
+    description: Indicateurs pour le gestionnaire (PROGRAMMATEUR) et l'administrateur
 paths:
   /api/films:
     get:
@@ -344,6 +346,30 @@ paths:
         '403': { $ref: '#/components/responses/AccesRefuse' }
         '404': { description: Billet inconnu }
         '409': { description: 'Entrée refusée : billet déjà utilisé, non payé, trop tôt ou séance terminée (champ resultat)' }
+  /api/pilotage/remplissage:
+    get:
+      tags: [Pilotage]
+      summary: Taux de remplissage par séance, par film et moyen
+      description: Seules les places payées comptent. Période par défaut, 7 jours avant et après aujourd'hui.
+      security: [{ basicAuth: [] }]
+      parameters:
+        - { name: du, in: query, required: false, schema: { type: string, format: date } }
+        - { name: au, in: query, required: false, schema: { type: string, format: date } }
+      responses:
+        '200':
+          description: Indicateurs de remplissage
+          content:
+            application/json:
+              example:
+                du: '2026-11-13'
+                au: '2026-11-27'
+                moyenne: 25
+                placesVendues: 5
+                placesOffertes: 20
+                films: [{ film: Bird, seances: 1, vendues: 4, capacite: 10, taux: 40 }]
+                seances: [{ seanceId: 1, film: Bird, salle: Salle 1, debut: '2026-11-21T14:00:00+01:00', vendues: 4, capacite: 10, taux: 40 }]
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '403': { $ref: '#/components/responses/AccesRefuse' }
 components:
   securitySchemes:
     basicAuth:
