@@ -5,7 +5,12 @@ namespace App\Controller;
 use App\Entity\Seance;
 use App\Repository\FilmRepository;
 use App\Repository\SeanceRepository;
+use App\Entity\Utilisateur;
+use App\Exception\DonneesInvalidesException;
+use App\Exception\PlaceDejaPriseException;
 use App\Service\PlacesService;
+use App\Service\ReservationService;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,6 +26,7 @@ class SeanceController extends AbstractController
         private readonly SeanceRepository $seanceRepository,
         private readonly FilmRepository $filmRepository,
         private readonly PlacesService $placesService,
+        private readonly ReservationService $reservationService,
     ) {
     }
 
@@ -49,13 +55,43 @@ class SeanceController extends AbstractController
     #[Route('/{id}', name: 'seance_voir', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function voir(int $id): Response
     {
-        $seance = $this->trouverSeance($id);
+        return $this->afficherSeance($this->trouverSeance($id));
+    }
 
+    /**
+     * User story « Réservation - Choisir sa place » : le client coche ses places sur le plan.
+     */
+    #[Route('/{id}/reserver', name: 'seance_reserver', requirements: ['id' => '\d+'], methods: ['POST'])]
+    #[IsGranted('ROLE_USER', message: 'Connectez-vous pour réserver.')]
+    public function reserver(Request $request, int $id): Response
+    {
+        $seance = $this->trouverSeance($id);
+        if (!$this->isCsrfTokenValid('reserver'.$id, $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException('Jeton de sécurité invalide, merci de recharger la page.');
+        }
+
+        /** @var Utilisateur $client */
+        $client = $this->getUser();
+        try {
+            $reservation = $this->reservationService->reserver($seance, $request->request->all('places'), 'EN_LIGNE', $client);
+        } catch (DonneesInvalidesException $e) {
+            return $this->afficherSeance($seance, implode(' ', $e->getErreurs()), 422);
+        } catch (PlaceDejaPriseException $e) {
+            return $this->afficherSeance($seance, $e->getMessage(), 409);
+        }
+
+        return $this->redirectToRoute('reservation_voir', ['id' => $reservation->getId()]);
+    }
+
+    private function afficherSeance(Seance $seance, ?string $erreur = null, int $statut = 200): Response
+    {
         return $this->render('seance/voir.html.twig', [
             'seance' => $seance,
             'plan' => $this->placesService->plan($seance),
             'restantes' => $this->placesService->placesRestantes($seance),
-        ]);
+            'maxPlaces' => ReservationService::MAX_PLACES,
+            'erreur' => $erreur,
+        ], new Response(status: $statut));
     }
 
     protected function trouverSeance(int $id): Seance

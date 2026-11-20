@@ -5,6 +5,8 @@ namespace App\Repository;
 use App\Entity\Billet;
 use App\Entity\Reservation;
 use App\Entity\Seance;
+use App\Service\ReservationService;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -23,16 +25,14 @@ class BilletRepository extends ServiceEntityRepository
      *
      * @return int[]
      */
-    public function idsPlacesOccupees(Seance $seance): array
+    public function idsPlacesOccupees(Seance $seance, ?\DateTimeImmutable $maintenant = null): array
     {
-        $lignes = $this->createQueryBuilder('b')
+        $qb = $this->createQueryBuilder('b')
             ->select('IDENTITY(b.place) AS place')
             ->join('b.reservation', 'r')
             ->andWhere('b.seance = :seance')
-            ->andWhere('r.statut != :annulee')
-            ->setParameter('seance', $seance)
-            ->setParameter('annulee', Reservation::STATUT_ANNULEE)
-            ->getQuery()->getScalarResult();
+            ->setParameter('seance', $seance);
+        $lignes = $this->filtrerPlacesPrises($qb, $maintenant)->getQuery()->getScalarResult();
 
         return array_map(static fn (array $l) => (int) $l['place'], $lignes);
     }
@@ -49,15 +49,13 @@ class BilletRepository extends ServiceEntityRepository
         if ([] === $seances) {
             return [];
         }
-        $lignes = $this->createQueryBuilder('b')
+        $qb = $this->createQueryBuilder('b')
             ->select('IDENTITY(b.seance) AS seance, COUNT(b.id) AS prises')
             ->join('b.reservation', 'r')
             ->andWhere('b.seance IN (:seances)')
-            ->andWhere('r.statut != :annulee')
             ->setParameter('seances', $seances)
-            ->setParameter('annulee', Reservation::STATUT_ANNULEE)
-            ->groupBy('b.seance')
-            ->getQuery()->getScalarResult();
+            ->groupBy('b.seance');
+        $lignes = $this->filtrerPlacesPrises($qb)->getQuery()->getScalarResult();
 
         $comptes = [];
         foreach ($lignes as $ligne) {
@@ -65,5 +63,19 @@ class BilletRepository extends ServiceEntityRepository
         }
 
         return $comptes;
+    }
+
+    /**
+     * Une place est prise si sa réservation est payée, ou en attente de paiement depuis moins de 15 minutes.
+     */
+    private function filtrerPlacesPrises(QueryBuilder $qb, ?\DateTimeImmutable $maintenant = null): QueryBuilder
+    {
+        $limite = ($maintenant ?? new \DateTimeImmutable())->modify(sprintf('-%d minutes', ReservationService::MINUTES_BLOCAGE));
+
+        return $qb
+            ->andWhere('r.statut = :payee OR (r.statut = :attente AND r.dateReservation > :limite)')
+            ->setParameter('payee', Reservation::STATUT_PAYEE)
+            ->setParameter('attente', Reservation::STATUT_EN_ATTENTE)
+            ->setParameter('limite', $limite);
     }
 }

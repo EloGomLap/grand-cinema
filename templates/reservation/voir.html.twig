@@ -1,0 +1,19 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Réservation n°{{ reservation.id }}{% endblock %}
+
+{% block body %}
+    {% set s = reservation.seance %}
+    <h1>Réservation n°{{ reservation.id }}</h1>
+    <article class="carte recap">
+        <h2>{{ s.film.titre }}</h2>
+        <p>{{ s.dateHeureDebut|date('d/m/Y à H:i') }} - {{ s.salle.nom }} - {{ s.langue }}</p>
+        <p>Places : <strong>{% for b in reservation.billets %}{{ b.place.libelle }}{{ not loop.last ? ', ' }}{% endfor %}</strong></p>
+        <p>Montant : <strong>{{ reservation.montantTotal|number_format(2, ',', ' ') }} €</strong></p>
+        <p class="statut">
+            {% if reservation.estPayee %}<span class="badge ok">Payée</span>
+            {% elseif reservation.statut == 'ANNULEE' or expiree %}<span class="badge ko">Expirée : les places ont été libérées</span>
+            {% else %}<span class="badge">En attente de paiement</span> <span class="meta">vos places sont bloquées {{ minutesBlocage }} minutes</span>{% endif %}
+        </p>
+    </article>
+{% endblock %}
