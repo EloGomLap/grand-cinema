@@ -1,5 +1,11 @@
 # Grand Cinéma - Application de réservation
 
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=EloGomLap_grand-cinema&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=EloGomLap_grand-cinema)
+[![Sécurité](https://sonarcloud.io/api/project_badges/measure?project=EloGomLap_grand-cinema&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=EloGomLap_grand-cinema)
+[![Fiabilité](https://sonarcloud.io/api/project_badges/measure?project=EloGomLap_grand-cinema&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=EloGomLap_grand-cinema)
+[![Maintenabilité](https://sonarcloud.io/api/project_badges/measure?project=EloGomLap_grand-cinema&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=EloGomLap_grand-cinema)
+[![Duplication](https://sonarcloud.io/api/project_badges/measure?project=EloGomLap_grand-cinema&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=EloGomLap_grand-cinema)
+
 Application web de réservation de places pour le cinéma « Le Grand Cinéma ».
 Objectif métier : augmenter la fréquentation de 30 % en 12 mois et absorber les pics du festival de Jazz.
 
@@ -12,7 +18,7 @@ Objectif métier : augmenter la fréquentation de 30 % en 12 mois et absorber le
 | Documentation API | OpenAPI 3 (`public/openapi.yaml`) affichée avec Swagger UI sur `/api/doc` |
 | Front-end | Twig + JavaScript (interface client et interface guichet) |
 | Tests | PHPUnit (unitaires), WebTestCase (fonctionnels) |
-| Qualité | SonarCloud |
+| Qualité | SonarCloud (analyse automatique de chaque push et de chaque merge request) |
 | CI | GitHub Actions (`.github/workflows/ci.yml`) : tests à chaque push et pull request |
 
 ## Organisation du dépôt
@@ -152,6 +158,16 @@ Documentation interactive : `/api/doc` (Swagger UI). Bouton **Authorize** pour s
 | GET | /api/pilotage/frequentation | Programmateur | Fréquentation et recettes |
 
 Codes d'erreur : 400 (données invalides, avec le détail par champ), 401 (non authentifié), 403 (rôle insuffisant), 404 (ressource introuvable), 409 (conflit).
+
+## Qualité (SonarCloud)
+
+Tableau de bord : https://sonarcloud.io/project/overview?id=EloGomLap_grand-cinema
+
+- **Analyse automatique** : SonarCloud analyse la branche `main`, la branche `develop` et chaque merge request, et publie le résultat dans la merge request sur GitHub.
+- **Quality gate** (sur le nouveau code) : note A en fiabilité, sécurité et maintenabilité, 100 % des points sensibles (security hotspots) relus, moins de 3 % de duplication. Une merge request qui ne passe pas la quality gate n'est pas fusionnée.
+- **Branches durables** : `main` et `develop` (réglage `sonar.branch.longLivedBranches.regex`), pour que les merge requests vers `develop` soient comparées à `develop`.
+- **Couverture** : mesurée par PHPUnit dans l'intégration continue (`--coverage-text`), l'analyse automatique de SonarCloud ne l'importe pas.
+- Un problème signalé à tort ou assumé est marqué « accepté » dans SonarCloud avec sa justification, plutôt que de modifier le code sans raison.
 
 ## Installation (développement)
 
